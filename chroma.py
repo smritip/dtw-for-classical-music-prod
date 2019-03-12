@@ -1,16 +1,16 @@
+## Smriti Pramanick
+## Using Dynamic Time Warping to Improve the Classical Music Production Workflow
+
 import math
 import numpy as np
 import librosa
-
-# Globals
-fft_len = 4096  # FFT window length
-hop_size = 2048  # FFT hop size
-fs = 22050  # sample rate
+from constants import *
 
 def wav_to_chroma(path_to_wav_file):
 
 	# generate wav using librosa
 	wav, wav_fs = librosa.load(path_to_wav_file)
+	print("the sampling rate is", wav_fs)
 	assert(wav_fs == fs)
 
 	# create chroma (STFT --> spectrogram --> chromagram)
