@@ -25,7 +25,6 @@ def get_markers(mmd_file):
 	return markers
 
 def get_samples_to_labels(mmd_file):
-	print("HELLo")
 
 	# read in the file and initialize tree
 	tree = ET.parse(mmd_file)
@@ -33,6 +32,7 @@ def get_samples_to_labels(mmd_file):
 
 	timecodes = []
 	labels = []
+	ratings = []
 
 	# TODO(smritip): this assumes a certain format of the MMD file, change to be safer
 	for elem in root.iter():
@@ -42,9 +42,11 @@ def get_samples_to_labels(mmd_file):
 		if elem.tag == 'Name':
 			# print("name: ", elem.text)
 			labels.append(elem.text)
+		if elem.tag == "Rating":
+			ratings.append(elem.text)
 
 	# convert timecodes to samples
 	samples = [float(tc) * timecode_multiplier_96000 for tc in timecodes]
 	times = [s / fs_bso for s in samples]
 
-	return samples, times, labels
+	return times, labels, ratings

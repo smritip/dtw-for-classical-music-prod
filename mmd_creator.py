@@ -24,7 +24,7 @@ def make_mmd(timecodes, names, ratings, filename):
 	tree.write(filename)
 
 def get_uid():
-	uids = [str(randint(0, 255)) for i in range(16)]
+	uids = ["{0:0=3d}".format(randint(0, 255)) for i in range(16)]
 	uid = "-".join(uids)
 	prefix = "16-"
 	uid = prefix + uid
