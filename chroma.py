@@ -10,7 +10,6 @@ def wav_to_chroma(path_to_wav_file):
 
 	# generate wav using librosa
 	wav, wav_fs = librosa.load(path_to_wav_file)
-	print("the sampling rate is", wav_fs)
 	assert(wav_fs == fs)
 
 	# create chroma (STFT --> spectrogram --> chromagram)
