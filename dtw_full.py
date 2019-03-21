@@ -55,8 +55,10 @@ def get_new_marker(sample, gt_times, gt_timecodes, gt_names):
 
     return (None, None)
 
-a = 'bso_files/4-27_crop.wav'
-b = 'bso_files/4-28_crop.wav'
+# a = 'bso_files/4-27_crop.wav'
+# b = 'bso_files/4-28_crop.wav'
+a = 'bso_files/4-27.wav'
+b = 'bso_files/4-28.wav'
 
 print("creating chroma")
 a_chroma = wav_to_chroma(a)
@@ -92,17 +94,17 @@ for i in range(len(a_samples)):
 	while path[sample_index][0] < a_samples[i]:
 		print(sample_index, i)
 		sample_index += 1
-		if sample_index > len(path):
+		if sample_index == len(path):
 			break
-	print(i)
-	if sample_index > len(path):
-			break
-	b_samples = path[sample_index][1]
+	# print(i)
+	if sample_index == len(path):
+		break
+	b_samples.append(path[sample_index][1])
 
 # assert(len(b_samples) == len(a_names))
 
-b_timecodes = [s * 102400 for s in b_samples]
+b_timecodes = [str(s * 102400 * 2048) for s in b_samples]
 b_names = a_names[:len(b_timecodes)]
 b_ratings = a_ratings[:len(b_timecodes)]
 
-make_mmd(b_timecodes, b_names, b_ratings, "test.mmd")
+make_mmd(b_timecodes, b_names, b_ratings, "test_4-27_4-28.mmd")

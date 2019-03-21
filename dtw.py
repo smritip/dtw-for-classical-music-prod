@@ -25,16 +25,20 @@ from chroma import wav_to_chroma
 
 # TODO(smritip): rewrite without Python loops make more efficient
 # Create cost matrix between two sequences x and y, using cosine distance.
-def get_cost_matrix(x, y) :
-    N = x.shape[1]
-    M = y.shape[1]
-    max_range= max(N, M)
-    cost = np.empty((N, M))
-    for i in range(N):
-        for j in range(M):
-            cost[i, j] = 1 - np.true_divide(np.dot(x[:, i], y[:, j]), (np.linalg.norm(x[:, i]) * np.linalg.norm(y[:, j])))
-    
-    return cost
+def get_cost_matrix(x, y, normalized_chromagrams=True) :
+	if normalized_chromagrams:
+		return 1 - np.dot(x.T, y)
+
+	# without normalized chromagrams
+	N = x.shape[1]
+	M = y.shape[1]
+	max_range= max(N, M)
+	cost = np.empty((N, M))
+	for i in range(N):
+		for j in range(M):
+			cost[i, j] = 1 - np.true_divide(np.dot(x[:, i], y[:, j]), (np.linalg.norm(x[:, i]) * np.linalg.norm(y[:, j])))
+
+	return cost
 
 # Calculate the accumulated cost and backtracking matrices based on the cost matrix.
 def run_dtw(C):
