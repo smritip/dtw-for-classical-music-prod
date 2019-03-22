@@ -23,7 +23,6 @@
 import numpy as np
 from chroma import wav_to_chroma
 
-# TODO(smritip): rewrite without Python loops make more efficient
 # Create cost matrix between two sequences x and y, using cosine distance.
 def get_cost_matrix(x, y, normalized_chromagrams=True) :
 	if normalized_chromagrams:
@@ -69,7 +68,7 @@ def run_dtw(C):
         B[0, i] = 1
     
     # calculate accumulated cost for rest of matrix
-    # TODO(smritip): take a look at optimizations
+    # TODO(smritip): take a look at optimizations (code without loop, use argmin)
     for i in range(1, n):
         for j in range(1, m):
             p_costs = [(i-1, j), (i, j-1), (i-1, j-1)]
