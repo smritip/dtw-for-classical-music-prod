@@ -5,7 +5,6 @@ import xml.etree.ElementTree as ET
 from constants import *
 from random import *
 
-
 def make_mmd(timecodes, names, ratings, filename):
 	root = ET.Element("MediaMetaData")
 	ET.SubElement(root, "TakeName")
@@ -36,5 +35,3 @@ def make_10_markers():  # every 5 seconds
 	ratings = ['2' for i in range(10)]
 	
 	make_mmd(timecodes, names, ratings, "10markers.mmd")
-
-make_10_markers()

@@ -98,7 +98,7 @@ def find_path(B) :
     while current != goal:
         ptr = B[current[0], current[1]]
 
-        # without if: just apply -1, 0, -1, etc
+        # TODO(smritip): without if: just apply -1, 0, -1, etc
 
         if ptr == 1:  # go left
             next_pt = (current[0], current[1] - 1)    
