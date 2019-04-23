@@ -18,16 +18,11 @@ from mmd.mmd_creator import make_mmd, get_uid
 
 class AutomaticMarkingTransfer():
 
-    def __init__(self):  # interactive init method from command line
-        print("")
-        self.ref_wav = input("Provide a path for the reference recording: ")
-        print("")
-        self.ref_mmd = input("Provide a path for the reference MMD file: ")
-        print("")
-        self.new_wav = input("Provide a path for the new recording: ")
-        print("")
-        self.new_mmd = input("Provide a path for the new MMD file (to be created): ")
-        print("")
+    def __init__(self, ref_wav, ref_mmd, new_wav, new_mmd):
+        self.ref_wav = ref_wav
+        self.ref_mmd = ref_mmd
+        self.new_wav = new_wav
+        self.new_mmd = new_mmd
 
     def transfer_markings(self):
 
@@ -79,7 +74,17 @@ class AutomaticMarkingTransfer():
 
         make_mmd(new_timecodes, new_names, new_ratings, self.new_mmd)
 
-        print('Automatic narking transfer complete!\n')
+        print('Automatic marking transfer complete!\n')
 
-amt = AutomaticMarkingTransfer()
-amt.transfer_markings()
+## Testing from the command line:
+# print("")
+# ref_wav = input("Provide a path for the reference recording: ")
+# print("")
+# ref_mmd = input("Provide a path for the reference MMD file: ")
+# print("")
+# new_wav = input("Provide a path for the new recording: ")
+# print("")
+# new_mmd = input("Provide a path for the new MMD file (to be created): ")
+# print("")
+# amt = AutomaticMarkingTransfer(ref_wav, ref_mmd, new_wav, new_mmd)
+# amt.transfer_markings()
