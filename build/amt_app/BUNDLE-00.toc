@@ -1,0 +1,3 @@
+([('amt_app',
+   '/Users/smriti/Desktop/MIT/Meng/Thesis/dtw-for-classical-music-prod/dist/amt_app',
+   'EXECUTABLE')],)
