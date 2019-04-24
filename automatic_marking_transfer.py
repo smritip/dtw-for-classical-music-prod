@@ -2,7 +2,7 @@
 ## Using Dynamic Time Warping to Improve the Classical Music Production Workflow
 
 '''
-    Automatic Marking Trasnfer (AMT)
+    Automatic Marking Transfer (AMT)
     Given: 2 audio recordings of the same musical piece ("ref_wav" and "new_wav"),
            1 MMD file with markers for one recording (for "ref_wav", called "ref_mmd")
     Goal: Create an MMD file with the same markers in the correct places for the second recording (for "new_wav")

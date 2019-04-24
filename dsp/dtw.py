@@ -113,3 +113,42 @@ def find_path(B) :
     path.reverse()
         
     return path
+
+
+# DTW for audio matching
+# dtw_match_cost calculates warping paths that best match a query to a database by running DTW
+
+def dtw_match_cost(C, steps):
+    N, M = C.shape
+    
+    # create accumulated cost matrix. Make D larger so that D[:,-1] and D[-1,:] are valid
+    # and have inifinite cost. (this is due to STEPS having -2 in their step size)
+    D = np.zeros((N + 1, M + 1))
+    D[N, :] = 10000000
+    D[:, M] = 10000000
+    
+    # backtracking index matrix - fill with zeros
+    B = np.zeros(C.shape, dtype=np.int)
+
+    # Initial values for D:
+    D[0, 0] = C[0, 0]
+    
+    # first column
+    for n in range(1, N):
+        D[n, 0] = C[n, 0] + D[n - 1, 0]
+
+    # first row - here we do not accumulate costs.
+    D[0, 0:M] = C[0, :]
+
+    # compute accumulated cost, and keep track of steps
+    for m in range(1, M):
+        for n in range(1, N):
+            # find minimal cost to reach (n,m). Accumulate into D. Remember step
+            costs = (D[n - 1, m - 1], D[n - 1, m - 2], D[n - 2, m - 1])
+            best_step  = np.argmin(costs)
+            D[n, m] = costs[best_step] + C[n, m]
+            B[n, m] = best_step
+
+    # return accumulated cost and backtracking. 
+    # Do not return that extra row/column of D.
+    return D[:-1, :-1], B
