@@ -7,7 +7,7 @@
     	   List of wav files to search through: the database (list of wav files)
 		   Number of matches to search for (integer)
     Goal: Find the query audio in the database (return matches as a list of files and corresponding timestamps)
-    How: Using DTW (see 'dtw_match_cost' in dsp.dtw)
+    How: Using DTW for audio matching (see 'dtw_match_cost' in dsp.dtw)
 '''
 
 # TODO(smritip): write class (like with AMT) and search through list of wav files (not just one)
