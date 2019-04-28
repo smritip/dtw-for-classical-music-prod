@@ -22,6 +22,7 @@
 
 import numpy as np
 from dsp.chroma import wav_to_chroma
+from constants import *
 
 # Create cost matrix between two sequences x and y, using cosine distance.
 def get_cost_matrix(x, y, normalized_chromagrams=True) :
@@ -118,7 +119,9 @@ def find_path(B) :
 # DTW for audio matching
 # dtw_match_cost calculates warping paths that best match a query to a database by running DTW
 
-def dtw_match_cost(C, steps):
+STEPS = ((-1, -1), (-1, -2), (-2, -1))
+
+def dtw_match_cost(C):
     N, M = C.shape
     
     # create accumulated cost matrix. Make D larger so that D[:,-1] and D[-1,:] are valid
@@ -152,3 +155,33 @@ def dtw_match_cost(C, steps):
     # return accumulated cost and backtracking. 
     # Do not return that extra row/column of D.
     return D[:-1, :-1], B
+
+def find_top_n_troughs(x, n, win_hlen):
+    troughs = []
+    signal = x.copy()
+    maximum = np.amax(signal)
+    for i in range(n):
+        minimum_index = np.argmin(signal)
+        troughs.append(minimum_index)
+        left = max(minimum_index - win_hlen, 0)
+        right = min(minimum_index + win_hlen, len(signal) - 1)
+        signal[left : right] = maximum
+    return troughs, signal
+
+def get_match_regions(d_dtw, B, num_matches):
+    N = B.shape[0]
+    end_pts, new_sig = find_top_n_troughs(d_dtw, num_matches, N)
+    matches = []
+    for pt in end_pts:
+        current = (N-1, pt)
+        while current[0] >= 0:
+            ptr = B[current[0], current[1]]
+            step = STEPS[ptr]
+            current = (current[0] + step[0], current[1] + step[1])
+        ff = fs / hop_size
+        start = current[1] / ff
+        end = pt / ff
+        cost = d_dtw[pt]
+        matches.append((start, end))
+        
+    return matches
