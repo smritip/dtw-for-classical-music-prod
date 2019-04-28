@@ -10,7 +10,6 @@
     How: Using DTW for audio matching (see 'dtw_match_cost' in dsp.dtw)
 '''
 
-# TODO(smritip): write class (like with AMT) and search through list of wav files (not just one)
 # TODO(smritip): do we want to run on each db file, or combine and run on larger one
 # TODO(smritip): do we want to build up db for a project and then just have queries after
 # TODO(smritip): specify or calculate matches per file (maybe based on length)
@@ -45,15 +44,21 @@ class AudioSearchSystem():
 		return matches_dict
 
 	def print_matches(self, matches_dict):
-		print({wav : [self.format_match(m) for m in matches_dict[wav]] for wav in matches_dict})
+		result = {self.format_wav_filename(wav) : [self.format_match(m) for m in matches_dict[wav]] for wav in matches_dict}
+		print(result)
+		return result
+
+	def format_wav_filename(self, wav_file):
+		return wav_file.split("/")[-1]
 
 	def format_time(self, secs):
+		# TODO(smritip): check to see if time granularity is enough
 		return str(int(secs / 60)) + ":" + str(int(secs % 60))
 
 	def format_match(self, match):
 		return self.format_time(match[0]) + " - " + self.format_time(match[1])
 
-
-search_system = AudioSearchSystem("audio/mozart_query.wav", ["audio/mozart_eine_kleine1.wav"], 2)
-matches = search_system.search()
-search_system.print_matches(matches)
+## Testing from the command line:
+# search_system = AudioSearchSystem("audio/mozart_query.wav", ["audio/mozart_eine_kleine1.wav"], 2)
+# matches = search_system.search()
+# search_system.print_matches(matches)
