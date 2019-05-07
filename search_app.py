@@ -29,7 +29,7 @@ layout = [[sg.Text('Audio Search System', font=("Helvetica", 20))],
           [sg.Text('Path to query wav file:', size=(28, 1), font=("Helvetica", 12)), sg.InputText(), sg.FileBrowse()],
           [sg.Text('Folder with wav files to search through:', size=(28, 1), font=("Helvetica", 12)), sg.InputText(), sg.FolderBrowse()],
           [sg.Text('Number of matches to find (per file):', size=(28, 1), font=("Helvetica", 12)), sg.InputText()],
-          [sg.ReadButton("Search"), sg.Cancel()],
+          [sg.ReadButton("Search"), sg.Cancel(), sg.ReadButton("Close Window")],
           [sg.Text('', size=(2, 1))],
           [sg.Text('Matches:', font=("Helvetica", 12))],
           [sg.Text('', size=(50, 10), font=("Helvetica", 14), key='_OUTPUT_')]]
@@ -51,6 +51,8 @@ while True:
         matches = search_system.search()
         matches_result = search_system.print_matches(matches)
         window.FindElement('_OUTPUT_').Update(matches_result)
+    elif event == "Cancel":
+        print("Cancelled")
     else:
         break   
 

@@ -23,22 +23,32 @@ class AutomaticMarkingTransfer():
         self.ref_mmd = ref_mmd
         self.new_wav = new_wav
         self.new_mmd = new_mmd
+        self.stop = False
+
+    def cancel_amt(self):
+        self.stop = True
+
+    def check_status(self):
+        if self.stop:
+            print("Cancelled")
+            return True
+        return False
 
     def transfer_markings(self):
 
         # First, run DTW
 
-        print("Running DTW:\n")
+        print("\nRunning DTW:\n")
         print("1. Creating chromagrams")
         ref_chroma = wav_to_chroma(self.ref_wav)
         new_chroma = wav_to_chroma(self.new_wav)
 
         print("2. Creating Cost Matrix")
         C = get_cost_matrix(ref_chroma, new_chroma)
-
+        
         print("3. Creating Accumulated Cost Matrix")
         D, B = run_dtw(C)
-
+        
         print("4. Backtracking to finding DTW path\n")
         path = find_path(B)
 

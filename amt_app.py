@@ -1,6 +1,9 @@
 import PySimpleGUI as sg
 
+from app_threading import thread_with_trace
 from automatic_marking_transfer import AutomaticMarkingTransfer
+
+global amt
 
 # Theme Colors
 # on Windows, can use sg.ChangeLookAndFeel(...)
@@ -30,19 +33,46 @@ layout = [[sg.Text('Automatic Marking Transfer', font=("Helvetica", 20))],
           [sg.Text('Path to new wav file:', size=(25, 1), font=("Helvetica", 12)), sg.InputText(), sg.FileBrowse()],
           [sg.Text('Destination folder for new MMD file:', size=(25, 1), font=("Helvetica", 12)), sg.InputText(), sg.FolderBrowse()],
           [sg.Text('Name for new MMD file:', size=(25, 1), font=("Helvetica", 12)), sg.InputText()],
-          [sg.ReadButton("Transfer"), sg.Cancel()]]
+          [sg.ReadButton("Transfer"), sg.Cancel(), sg.ReadButton("Close Window")]]
 
-window = sg.Window('Automatic Marking Transfer').Layout(layout)  
+window = sg.Window('Automatic Marking Transfer').Layout(layout)
 
-event, values = window.Read()
+# App logic
 
-# Actions
-if event == "Transfer":
-	ref_wav = values[0]
-	ref_mmd = values[1]
-	new_wav = values[2]
-	new_mmd = values[3] + '/' + values[4]
-	amt = AutomaticMarkingTransfer(ref_wav, ref_mmd, new_wav, new_mmd)
-	amt.transfer_markings()
-else:
-	print("Cancelled")
+amt = None
+
+while True:
+
+	event, values = window.Read()
+
+	if event == "Transfer":
+		
+		if values[0] == "":  # default for testing
+			ref_wav = "bso_files/4-27.wav"
+			ref_mmd = "bso_files/4-27.mmd"
+			new_wav = "bso_files/4-28.wav"
+			new_mmd = "testing/test.mmd"
+		else:
+			ref_wav = values[0]
+			ref_mmd = values[1]
+			new_wav = values[2]
+			new_mmd = values[3] + '/' + values[4]
+
+		amt = AutomaticMarkingTransfer(ref_wav, ref_mmd, new_wav, new_mmd)
+
+		# start a new thread to carry out AMT (so it can be pre-empted by a cancel)
+		amt_thread = thread_with_trace(target = amt.transfer_markings)
+		amt_thread.start()
+
+	else:
+		if amt:
+			amt_thread.kill() 
+			amt_thread.join() 
+			if not amt_thread.isAlive():
+				print("\nCancelled AMT")
+		else:
+			print("\nNo AMT happening")
+		if event == "Close Window":
+			break
+
+window.Close()
