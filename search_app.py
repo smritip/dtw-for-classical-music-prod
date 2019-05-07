@@ -1,7 +1,10 @@
 import PySimpleGUI as sg
 import os
 
+from app_threading import thread_with_trace
 from audio_search_system import AudioSearchSystem
+
+global search_system
 
 # Theme Colors
 # on Windows, can use sg.ChangeLookAndFeel(...)
@@ -36,24 +39,50 @@ layout = [[sg.Text('Audio Search System', font=("Helvetica", 20))],
 
 window = sg.Window('Audio Search System').Layout(layout)  
 
-# Actions
+# App logic
+
+def run_search():
+    print("\nSearching")
+    matches = search_system.search()
+    matches_result = search_system.print_matches(matches)
+    window.FindElement('_OUTPUT_').Update(matches_result)
+
+search_system = None
+
 while True:      
+    
     event, values = window.Read()      
+    
     if event == "Search":
-        query_wav = values[0]
-        db_dir = values[1]
+        
+        if values[0] == "":  # default for testing
+            query_wav = "audio/search_testing/query/mozart_query.wav"
+            db_dir = "audio/search_testing/db"
+            num_matches = 5
+        else:
+            query_wav = values[0]
+            db_dir = values[1]
+            num_matches = int(values[2])
+        
         db = []
         for file in os.listdir(db_dir):
             if file.endswith(".wav"):
                 db.append(db_dir + "/" + file)
-        num_matches = int(values[2])
+        
         search_system = AudioSearchSystem(query_wav, db, num_matches)
-        matches = search_system.search()
-        matches_result = search_system.print_matches(matches)
-        window.FindElement('_OUTPUT_').Update(matches_result)
-    elif event == "Cancel":
-        print("Cancelled")
+
+        search_thread = thread_with_trace(target = run_search)
+        search_thread.start()
+    
     else:
-        break   
+        if search_system:
+            search_thread.kill() 
+            search_thread.join() 
+            if not search_thread.isAlive():
+                print("\nCancelled Search")
+        else:
+            print("\nNo Search happening")
+        if event == "Close Window":
+            break  
 
 window.Close()
