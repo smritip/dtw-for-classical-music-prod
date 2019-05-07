@@ -19,12 +19,12 @@ global amt
 #            button_color=('darkblue','#004441'),
 #            text_color="#ffffff")
 
-sg.SetOptions(background_color='#00706c',      
-           text_element_background_color='#00706c',      
-           element_background_color='#00706c',            
-           input_elements_background_color='#469f9a',
-           button_color=('black','#001b40'),
-           text_color="#ffffff")
+# sg.SetOptions(background_color='#00706c',      
+#            text_element_background_color='#00706c',      
+#            element_background_color='#00706c',            
+#            input_elements_background_color='#469f9a',
+#            button_color=('black','#001b40'),
+#            text_color="#ffffff")
 
 # UI elements
 layout = [[sg.Text('Automatic Marking Transfer', font=("Helvetica", 20))],      
@@ -33,7 +33,10 @@ layout = [[sg.Text('Automatic Marking Transfer', font=("Helvetica", 20))],
           [sg.Text('Path to new wav file:', size=(25, 1), font=("Helvetica", 12)), sg.InputText(), sg.FileBrowse()],
           [sg.Text('Destination folder for new MMD file:', size=(25, 1), font=("Helvetica", 12)), sg.InputText(), sg.FolderBrowse()],
           [sg.Text('Name for new MMD file:', size=(25, 1), font=("Helvetica", 12)), sg.InputText()],
-          [sg.ReadButton("Transfer"), sg.Cancel(), sg.ReadButton("Close Window")]]
+          [sg.Text('', size=(2, 1))],
+          [sg.ReadButton("Transfer"), sg.Cancel(), sg.ReadButton("Close Window")],
+          [sg.Text('', size=(2, 1))],
+          [sg.ProgressBar(1, orientation='h', size=(60, 18), key='progbar')]]
 
 window = sg.Window('Automatic Marking Transfer').Layout(layout)
 
@@ -43,7 +46,10 @@ amt = None
 
 while True:
 
-	event, values = window.Read()
+	event, values = window.Read(timeout=100)
+
+	if amt:
+		window.Element('progbar').UpdateBar(amt.get_progress())
 
 	if event == "Transfer":
 		
@@ -64,14 +70,14 @@ while True:
 		amt_thread = thread_with_trace(target = amt.transfer_markings)
 		amt_thread.start()
 
-	else:
+	elif event == "Cancel" or event == "Close Window":
+		window.Element('progbar').UpdateBar(0)
 		if amt:
+			amt = None
 			amt_thread.kill() 
 			amt_thread.join() 
 			if not amt_thread.isAlive():
 				print("\nCancelled AMT")
-		else:
-			print("\nNo AMT happening")
 		if event == "Close Window":
 			break
 

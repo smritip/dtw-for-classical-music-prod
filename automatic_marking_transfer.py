@@ -23,16 +23,11 @@ class AutomaticMarkingTransfer():
         self.ref_mmd = ref_mmd
         self.new_wav = new_wav
         self.new_mmd = new_mmd
-        self.stop = False
-
-    def cancel_amt(self):
-        self.stop = True
-
-    def check_status(self):
-        if self.stop:
-            print("Cancelled")
-            return True
-        return False
+        self.progress = 0
+        self.total_steps = 9.
+    
+    def get_progress(self):
+        return self.progress / self.total_steps
 
     def transfer_markings(self):
 
@@ -40,17 +35,26 @@ class AutomaticMarkingTransfer():
 
         print("\nRunning DTW:\n")
         print("1. Creating chromagrams")
+        
+        self.progress += 1
+        
         ref_chroma = wav_to_chroma(self.ref_wav)
+        self.progress += 1
+        
         new_chroma = wav_to_chroma(self.new_wav)
+        self.progress += 1
 
         print("2. Creating Cost Matrix")
         C = get_cost_matrix(ref_chroma, new_chroma)
+        self.progress += 1
         
         print("3. Creating Accumulated Cost Matrix")
         D, B = run_dtw(C)
+        self.progress += 1
         
         print("4. Backtracking to finding DTW path\n")
         path = find_path(B)
+        self.progress += 1
 
         # Then, create new markers for new_wav
 
@@ -61,6 +65,8 @@ class AutomaticMarkingTransfer():
         
         # convert ref_times to ref_samples
         ref_samples = [int((t * 22050) / 2048) for t in ref_times]
+
+        self.progress += 1
 
         print("2. Transferring markers")
 
@@ -80,9 +86,13 @@ class AutomaticMarkingTransfer():
         new_names = ref_names[:len(new_timecodes)]
         new_ratings = ref_ratings[:len(new_timecodes)]
 
+        self.progress += 1
+
         print("3. Creating", self.new_mmd, "\n")
 
         make_mmd(new_timecodes, new_names, new_ratings, self.new_mmd)
+
+        self.progress += 1
 
         print('Automatic marking transfer complete!\n')
 

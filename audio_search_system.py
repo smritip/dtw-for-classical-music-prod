@@ -25,18 +25,30 @@ class AudioSearchSystem():
 		self.query_wav = query_wav
 		self.db = db
 		self.num_matches = num_matches  ## per file matches
+		self.progress = 0
+		self.total_steps = 1 + len(self.db) * 4
+
+	def get_progress(self):
+		return self.progress / self.total_steps
 
 	def search(self):
+		
+		self.progress += 1
+
 		chroma_query = wav_to_chroma(self.query_wav)
 
 		matches_dict = {}
 
 		# search through each wav file in db for num_matches matches:
 		for wav in self.db:
+			self.progress += 1
 			chroma_db = wav_to_chroma(wav)
+			self.progress += 1
 			C = get_cost_matrix(chroma_query, chroma_db)
+			self.progress += 1
 			D, B = dtw_match_cost(C)
 			# last row of D is matching function
+			self.progress += 1
 			matching = D[-1, :]
 			matches = get_match_regions(matching, B, self.num_matches)
 			matches_dict[wav] = matches
