@@ -1,8 +1,12 @@
 import PySimpleGUI as sg
 import os
+import librosa
+
+from pygame import mixer
 
 from app_threading import thread_with_trace
 from audio_search_system import AudioSearchSystem
+from display_wav import create_figure, draw_figure
 
 global search_system
 
@@ -27,18 +31,23 @@ global search_system
 #            button_color=('black','#001b40'),
 #            text_color="#ffffff")
 
+
 # UI elements
+image_width = 4
+image_height = 2
+
 layout = [[sg.Text('Audio Search System', font=("Helvetica", 20))],      
           [sg.Text('Path to query wav file:', size=(28, 1), font=("Helvetica", 12)), sg.InputText(), sg.FileBrowse()],
           [sg.Text('Folder with wav files to search through:', size=(28, 1), font=("Helvetica", 12)), sg.InputText(), sg.FolderBrowse()],
           [sg.Text('Number of matches to find (per file):', size=(28, 1), font=("Helvetica", 12)), sg.InputText()],
+          [sg.Canvas(size=(image_width*100, image_height*100), key='canvas')],
           [sg.ReadButton("Search"), sg.Cancel(), sg.ReadButton("Close Window")],
           [sg.Text('', size=(2, 1))],
           [sg.ProgressBar(1, orientation='h', size=(60, 18), key='progbar')],
           [sg.Text('Matches:', font=("Helvetica", 12))],
-          [sg.Text('', size=(50, 10), font=("Helvetica", 14), key='_OUTPUT_')]]
+          [sg.Text('', size=(50, 18), font=("Helvetica", 14), key='_OUTPUT_')]]
 
-window = sg.Window('Audio Search System').Layout(layout)  
+window = sg.Window('Audio Search System').Layout(layout).Finalize() 
 
 # App logic
 
@@ -50,20 +59,38 @@ def run_search():
 
 search_system = None
 
-while True:      
+# defaults
+query_wav = "audio/search_testing/query/mozart_query.wav"
+db_dir = "audio/search_testing/db"
+num_matches = 5
+
+drawn = False
+
+while True:     
+
+    if not drawn:
+        print("hi here")
+        fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(query_wav)[0], image_width, image_height)
+        fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+        drawn = True 
     
     event, values = window.Read(timeout=100)
 
     if search_system:
-        window.Element('progbar').UpdateBar(search_system.get_progress())    
+        window.Element('progbar').UpdateBar(search_system.get_progress())   
+
+
     
     if event == "Search":
+
+
+        # mixer.init()
+        # mixer.music.load("audio/search_testing/query/mozart_query.wav")
+        # mixer.music.play()
+
+
         
-        if values[0] == "":  # default for testing
-            query_wav = "audio/search_testing/query/mozart_query.wav"
-            db_dir = "audio/search_testing/db"
-            num_matches = 5
-        else:
+        if values[0] != "":  # user input
             query_wav = values[0]
             db_dir = values[1]
             num_matches = int(values[2])
