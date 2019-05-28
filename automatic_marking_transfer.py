@@ -3,11 +3,11 @@
 
 '''
     Automatic Marking Transfer (AMT)
-    Given: 2 audio recordings of the same musical piece ("ref_wav" and "new_wav"),
+    Given: 2 audio recordings of the same musical piece ("ref_wav" and "unmarked_wav"),
            1 MMD file with markers for one recording (for "ref_wav", called "ref_mmd")
-    Goal: Create an MMD file with the same markers in the correct places for the second recording (for "new_wav")
+    Goal: Create an MMD file with the same markers in the correct places for the second recording (for "unmarked_wav")
     How: Use DTW to find points of musical correspondence and use this information to transfer
-         markers from one recording to the other (from "ref_wav" to "new_wav")
+         markers from one recording to the other (from "ref_wav" to "unmarked_wav")
 '''
 
 import numpy as np
@@ -18,11 +18,11 @@ from mmd.mmd_creator import make_mmd, get_uid
 
 class AutomaticMarkingTransfer():
 
-    def __init__(self, ref_wav, ref_mmd, new_wav, new_mmd):
+    def __init__(self, ref_wav, ref_mmd, unmarked_wav, unmarked_mmd):
         self.ref_wav = ref_wav
         self.ref_mmd = ref_mmd
-        self.new_wav = new_wav
-        self.new_mmd = new_mmd
+        self.unmarked_wav = unmarked_wav
+        self.unmarked_mmd = unmarked_mmd
         self.progress = 0
         self.total_steps = 9.
     
@@ -41,11 +41,11 @@ class AutomaticMarkingTransfer():
         ref_chroma = wav_to_chroma(self.ref_wav)
         self.progress += 1
         
-        new_chroma = wav_to_chroma(self.new_wav)
+        unmarked_chroma = wav_to_chroma(self.unmarked_wav)
         self.progress += 1
 
         print("2. Creating Cost Matrix")
-        C = get_cost_matrix(ref_chroma, new_chroma)
+        C = get_cost_matrix(ref_chroma, unmarked_chroma)
         self.progress += 1
         
         print("3. Creating Accumulated Cost Matrix")
@@ -56,7 +56,7 @@ class AutomaticMarkingTransfer():
         path = find_path(B)
         self.progress += 1
 
-        # Then, create new markers for new_wav
+        # Then, create new markers for unmarked_wav
 
         print("Creating new markers:\n")
         print("1. Parsing", self.ref_mmd)
@@ -88,23 +88,23 @@ class AutomaticMarkingTransfer():
 
         self.progress += 1
 
-        print("3. Creating", self.new_mmd, "\n")
+        print("3. Creating", self.unmarked_mmd, "\n")
 
-        make_mmd(new_timecodes, new_names, new_ratings, self.new_mmd)
+        make_mmd(new_timecodes, new_names, new_ratings, self.unmarked_mmd)
 
         self.progress += 1
 
         print('Automatic marking transfer complete!\n')
 
 ## Testing from the command line:
-# print("")
-# ref_wav = input("Provide a path for the reference recording: ")
-# print("")
-# ref_mmd = input("Provide a path for the reference MMD file: ")
-# print("")
-# new_wav = input("Provide a path for the new recording: ")
-# print("")
-# new_mmd = input("Provide a path for the new MMD file (to be created): ")
-# print("")
-# amt = AutomaticMarkingTransfer(ref_wav, ref_mmd, new_wav, new_mmd)
-# amt.transfer_markings()
+print("")
+ref_wav = input("Provide a path for the reference recording: ")
+print("")
+ref_mmd = input("Provide a path for the reference MMD file: ")
+print("")
+unmarked_wav = input("Provide a path for the unmarked recording: ")
+print("")
+unmarked_mmd = input("Provide a path for the unmarked MMD file (to be created): ")
+print("")
+amt = AutomaticMarkingTransfer(ref_wav, ref_mmd, unmarked_wav, unmarked_mmd)
+amt.transfer_markings()
