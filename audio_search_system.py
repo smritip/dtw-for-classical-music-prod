@@ -69,8 +69,3 @@ class AudioSearchSystem():
 
 	def format_match(self, match):
 		return self.format_time(match[0]) + " - " + self.format_time(match[1])
-
-## Testing from the command line:
-# search_system = AudioSearchSystem("audio/mozart_query.wav", ["audio/mozart_eine_kleine1.wav"], 2)
-# matches = search_system.search()
-# search_system.print_matches(matches)

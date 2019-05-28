@@ -15,6 +15,7 @@ from dsp.dtw import get_cost_matrix, run_dtw, find_path
 from dsp.chroma import wav_to_chroma
 from mmd.mmd_parser import get_markers, get_samples_to_labels
 from mmd.mmd_creator import make_mmd, get_uid
+from constants import *
 
 class AutomaticMarkingTransfer():
 
@@ -24,7 +25,7 @@ class AutomaticMarkingTransfer():
         self.unmarked_wav = unmarked_wav
         self.unmarked_mmd = unmarked_mmd
         self.progress = 0
-        self.total_steps = 9.
+        self.total_steps = 9
     
     def get_progress(self):
         return self.progress / self.total_steps
@@ -64,7 +65,7 @@ class AutomaticMarkingTransfer():
         ref_times, ref_names, ref_ratings = get_samples_to_labels(self.ref_mmd)
         
         # convert ref_times to ref_samples
-        ref_samples = [int((t * 22050) / 2048) for t in ref_times]
+        ref_samples = [int((t * fs) / hop_size) for t in ref_times]
 
         self.progress += 1
 
@@ -82,7 +83,7 @@ class AutomaticMarkingTransfer():
                 break
             new_samples.append(path[sample_index][1])
 
-        new_timecodes = [str(s * 102400 * 2048) for s in new_samples]
+        new_timecodes = [str(s * timecode_multiplier_22050 * hop_size) for s in new_samples]
         new_names = ref_names[:len(new_timecodes)]
         new_ratings = ref_ratings[:len(new_timecodes)]
 
@@ -95,16 +96,3 @@ class AutomaticMarkingTransfer():
         self.progress += 1
 
         print('Automatic marking transfer complete!\n')
-
-## Testing from the command line:
-print("")
-ref_wav = input("Provide a path for the reference recording: ")
-print("")
-ref_mmd = input("Provide a path for the reference MMD file: ")
-print("")
-unmarked_wav = input("Provide a path for the unmarked recording: ")
-print("")
-unmarked_mmd = input("Provide a path for the unmarked MMD file (to be created): ")
-print("")
-amt = AutomaticMarkingTransfer(ref_wav, ref_mmd, unmarked_wav, unmarked_mmd)
-amt.transfer_markings()

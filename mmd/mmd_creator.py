@@ -30,7 +30,7 @@ def get_uid():
 	return uid
 
 def make_10_markers():  # every 5 seconds
-	timecodes = [str(fs_bso * (5 * i) * 23520) for i in range(10)]
+	timecodes = [str(fs_bso * (5 * i) * timecode_multiplier_96000) for i in range(10)]
 	names = [str(i) for i in range(10)]
 	ratings = ['2' for i in range(10)]
 	

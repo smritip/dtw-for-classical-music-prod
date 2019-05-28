@@ -42,7 +42,7 @@ def get_samples_to_labels(mmd_file):  # uses list data structure
 			ratings.append(elem.text)
 
 	# convert timecodes to samples, and then to times (which unit agnostic to sample rate, etc.)
-	samples = [float(tc) * timecode_multiplier_96000 for tc in timecodes]
+	samples = [float(tc) * (1 / timecode_multiplier_96000) for tc in timecodes]
 	times = [s / fs_bso for s in samples]
 
 	return times, labels, ratings

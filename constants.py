@@ -7,6 +7,6 @@ hop_size = 2048  # FFT hop size
 fs = 22050  # sample rate
 
 # For Timecode calculation (used with Pyramix)
-timecode_multiplier_96000 = 1 / 23520
-timecode_multiplier_22050 = 1 / 102400
+timecode_multiplier_96000 = 23520
+timecode_multiplier_22050 = 102400
 fs_bso = 96000
