@@ -5,35 +5,17 @@ from automatic_marking_transfer import AutomaticMarkingTransfer
 
 global amt
 
-# Theme Colors
-# on Windows, can use sg.ChangeLookAndFeel(...)
-# sg.SetOptions(background_color='#d8fffc',      
-#            text_element_background_color='#d8fffc',      
-#            element_background_color='#d8fffc',            
-#            input_elements_background_color='#f4fffe')
-
-# sg.SetOptions(background_color='#11416b',      
-#            text_element_background_color='#11416b',      
-#            element_background_color='#11416b',            
-#            input_elements_background_color='#476c99',
-#            button_color=('darkblue','#004441'),
-#            text_color="#ffffff")
-
-# sg.SetOptions(background_color='#00706c',      
-#            text_element_background_color='#00706c',      
-#            element_background_color='#00706c',            
-#            input_elements_background_color='#469f9a',
-#            button_color=('black','#001b40'),
-#            text_color="#ffffff")
-
 # UI elements
-layout = [[sg.Text('Automatic Marking Transfer', font=("Helvetica", 20))],      
-          [sg.Text('Path to reference wav file:', size=(25, 1), font=("Helvetica", 12)), sg.InputText(), sg.FileBrowse()],
-          [sg.Text('Path to unmarked wav file:', size=(25, 1), font=("Helvetica", 12)), sg.InputText(), sg.FileBrowse()],
-          [sg.Text('', size=(2, 1))],
-          [sg.ReadButton("Transfer"), sg.Cancel(), sg.ReadButton("Close Window")],
-          [sg.Text('', size=(2, 1))],
-          [sg.ProgressBar(1, orientation='h', size=(60, 18), key='progbar')]]
+layout = [[sg.Text('')],
+		  [sg.Text('', size=(35, 1)), sg.Text('Automatic Marking Transfer', font=("Helvetica", 20))],  ## TODO: center text with function
+          [sg.Text('')],
+          [sg.Text('Path to reference wav file:', size=(20, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1)), sg.FileBrowse()],
+          [sg.Text('Path to unmarked wav file:', size=(20, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1)), sg.FileBrowse()],
+          [sg.Text('')],
+          [sg.Text('', size=(40, 1)), sg.ReadButton("Transfer"), sg.Cancel(), sg.ReadButton("Close Window")],
+          [sg.Text('')],
+          [sg.Text('', size=(10, 1)), sg.ProgressBar(1, orientation='h', size=(60, 15), key='progbar')],
+          [sg.Text('')]]
 
 window = sg.Window('Automatic Marking Transfer').Layout(layout)
 
@@ -74,7 +56,7 @@ while True:
 		amt_thread = thread_with_trace(target = amt.transfer_markings)
 		amt_thread.start()
 
-	elif event == "Cancel" or event == "Close Window":
+	elif event == "Cancel" or event == "Close Window" or event is None:
 		window.Element('progbar').UpdateBar(0)
 		if amt:
 			amt = None
@@ -82,7 +64,7 @@ while True:
 			amt_thread.join() 
 			if not amt_thread.isAlive():
 				print("\nCancelled AMT")
-		if event == "Close Window":
+		if event == "Close Window" or event is None:
 			break
 
 window.Close()
