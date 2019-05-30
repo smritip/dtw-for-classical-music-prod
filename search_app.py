@@ -10,37 +10,16 @@ from display_wav import create_figure, draw_figure
 
 global search_system
 
-# Theme Colors
-# on Windows, can use sg.ChangeLookAndFeel(...)
-# sg.SetOptions(background_color='#d8fffc',      
-#            text_element_background_color='#d8fffc',      
-#            element_background_color='#d8fffc',            
-#            input_elements_background_color='#f4fffe')
-
-# sg.SetOptions(background_color='#11416b',      
-#            text_element_background_color='#11416b',      
-#            element_background_color='#11416b',            
-#            input_elements_background_color='#476c99',
-#            button_color=('darkblue','#004441'),
-#            text_color="#ffffff")
-
-# sg.SetOptions(background_color='#00706c',      
-#            text_element_background_color='#00706c',      
-#            element_background_color='#00706c',            
-#            input_elements_background_color='#469f9a',
-#            button_color=('black','#001b40'),
-#            text_color="#ffffff")
-
 
 # UI elements
-image_width = 4
-image_height = 2
+image_width = 3
+image_height = 1.5
 
 layout = [[sg.Text('Audio Search System', font=("Helvetica", 20))],      
           [sg.Text('Path to query wav file:', size=(28, 1), font=("Helvetica", 12)), sg.InputText(), sg.FileBrowse()],
+          [sg.Canvas(size=(image_width*100, image_height*100), key='canvas'), sg.ReadButton("Play", key='__PLAYPAUSE__')],
           [sg.Text('Folder with wav files to search through:', size=(28, 1), font=("Helvetica", 12)), sg.InputText(), sg.FolderBrowse()],
           [sg.Text('Number of matches to find (per file):', size=(28, 1), font=("Helvetica", 12)), sg.InputText()],
-          [sg.Canvas(size=(image_width*100, image_height*100), key='canvas')],
           [sg.ReadButton("Search"), sg.Cancel(), sg.ReadButton("Close Window")],
           [sg.Text('', size=(2, 1))],
           [sg.ProgressBar(1, orientation='h', size=(60, 18), key='progbar')],
@@ -60,27 +39,39 @@ def run_search():
 search_system = None
 
 # defaults
-query_wav = "audio/search_testing/query/mozart_query.wav"
-db_dir = "audio/search_testing/db"
-num_matches = 5
+# query_wav = "audio/search_testing/query/mozart_query.wav"
+# db_dir = "audio/search_testing/db"
+# num_matches = 5
 
-drawn = False
+# initializations
+query_wav = ""
+start = True
 
 while True:     
 
-    if not drawn:
-        print("hi here")
-        fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(query_wav)[0], image_width, image_height)
-        fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
-        drawn = True 
-    
     event, values = window.Read(timeout=100)
 
+    if start:
+        fig, figure_x, figure_y, figure_w, figure_h = create_figure(0, image_width, image_height)
+        fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+        start = False
+    
+    if values[0] != query_wav:
+        # print("hello")
+        query_wav = values[0]
+        fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(query_wav)[0], image_width, image_height)
+        fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+
+        
+        
     if search_system:
         window.Element('progbar').UpdateBar(search_system.get_progress())   
 
 
-    
+    if event == "Play":
+        print("hi")
+        # window.FindElement('_PLAYPAUSE_').Update("Pause")
+
     if event == "Search":
 
 
@@ -105,7 +96,7 @@ while True:
         search_thread = thread_with_trace(target = run_search)
         search_thread.start()
     
-    elif event == "Cancel" or event == "Close Window":
+    elif event == "Cancel" or event == "Close Window" or event is None:
         window.Element('progbar').UpdateBar(0)
         if search_system:
             search_system = None
@@ -114,9 +105,7 @@ while True:
             search_thread.join() 
             if not search_thread.isAlive():
                 print("\nCancelled Search")
-        # else:
-        #     print("\nNo Search happening")
-        if event == "Close Window":
+        if event == "Close Window" or event is None:
             break  
 
 window.Close()

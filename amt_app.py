@@ -7,14 +7,14 @@ global amt
 
 # UI elements
 layout = [[sg.Text('')],
-		  [sg.Text('', size=(35, 1)), sg.Text('Automatic Marking Transfer', font=("Helvetica", 20))],  ## TODO: center text with function
+		  [sg.Text('Automatic Marking Transfer', font=("Helvetica", 20))],  ## TODO: center text with function
           [sg.Text('')],
           [sg.Text('Path to reference wav file:', size=(20, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1)), sg.FileBrowse()],
           [sg.Text('Path to unmarked wav file:', size=(20, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1)), sg.FileBrowse()],
           [sg.Text('')],
-          [sg.Text('', size=(40, 1)), sg.ReadButton("Transfer"), sg.Cancel(), sg.ReadButton("Close Window")],
+          [sg.ReadButton("Transfer"), sg.Cancel(), sg.ReadButton("Close Window")],
           [sg.Text('')],
-          [sg.Text('', size=(10, 1)), sg.ProgressBar(1, orientation='h', size=(60, 15), key='progbar')],
+          [sg.ProgressBar(1, orientation='h', size=(60, 15), key='progbar')],
           [sg.Text('')]]
 
 window = sg.Window('Automatic Marking Transfer').Layout(layout)
