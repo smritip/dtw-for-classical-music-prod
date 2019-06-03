@@ -12,9 +12,9 @@ layout = [[sg.Text('')],
           [sg.Text('Path to reference wav file:', size=(20, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1)), sg.FileBrowse()],
           [sg.Text('Path to unmarked wav file:', size=(20, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1)), sg.FileBrowse()],
           [sg.Text('')],
-          [sg.ReadButton("Transfer"), sg.Cancel(), sg.ReadButton("Close Window")],
+          [sg.Button("Transfer", key="Transfer"), sg.Cancel(), sg.ReadButton("Close Window")],
           [sg.Text('')],
-          [sg.ProgressBar(1, orientation='h', size=(60, 15), key='progbar')],
+          [sg.ProgressBar(1, orientation='h', size=(30, 15), key='progbar')],
           [sg.Text('')]]
 
 window = sg.Window('Automatic Marking Transfer').Layout(layout)
@@ -30,25 +30,28 @@ def wav_to_mmd_filename(wav):
 	mmd = mmd_dir + mmd_filename + ".mmd"
 	return mmd
 
+def is_wav(file):
+	return file[-4:] == ".wav"
+
 while True:
 
 	event, values = window.Read(timeout=100)
 
-	if amt:
-		window.Element('progbar').UpdateBar(amt.get_progress())
+	# user input checks (only allow transfer with valid files, ie wav)
+	if is_wav(values[0]) and is_wav(values[1]):
+		window.Element('Transfer').Update(disabled=False)
+	else:
+		window.Element('Transfer').Update(disabled=True)
 
+	# button click events	
 	if event == "Transfer":
 		
-		if values[0] == "":  # default for testing
-			ref_wav = "bso_files/test/4-27_crop.wav"
-			ref_mmd = "bso_files/test/4-27.mmd"
-			unmarked_wav = "bso_files/test/4-28_crop.wav"
-			unmarked_mmd = "bso_files/test/4-28.mmd"
-		else:
-			ref_wav = values[0]
-			ref_mmd = wav_to_mmd_filename(ref_wav)
-			unmarked_wav = values[1]
-			unmarked_mmd = wav_to_mmd_filename(unmarked_wav)
+		ref_wav = values[0]
+		ref_mmd = wav_to_mmd_filename(ref_wav)
+		unmarked_wav = values[1]
+		unmarked_mmd = wav_to_mmd_filename(unmarked_wav)
+
+		print(ref_wav, ref_mmd, unmarked_wav, unmarked_mmd)
 
 		amt = AutomaticMarkingTransfer(ref_wav, ref_mmd, unmarked_wav, unmarked_mmd)
 
@@ -66,5 +69,9 @@ while True:
 				print("\nCancelled AMT")
 		if event == "Close Window" or event is None:
 			break
+
+	# progress bar
+	if amt:
+		window.Element('progbar').UpdateBar(amt.get_progress())
 
 window.Close()
