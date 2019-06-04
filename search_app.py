@@ -57,12 +57,22 @@ def run_search():
     print("\nSearching")
     matches = search_system.search()
     matches_result = search_system.print_matches(matches)
-    # matches_display = []
-    # for match in matches:
-    #     for cut in match:
-    #         matches_display.append([match, cut[0], cut[1]])
+    for match in matches:
+        for cut in matches[match]:
+            matches_display.append([match, cut[0], cut[1]])
 
     print(matches_display)
+    matches_index = 0
+    current_match = matches_display[matches_index]
+    current_wav = current_match[0]
+    current_offset = float(current_match[1])
+    current_duration = float(current_match[2]) - float(current_match[1])
+    print("redrawing")
+    print(current_wav)
+    print(current_offset)
+    print(current_duration)
+    fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], image_width, image_height)
+    fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
     # window.FindElement('_match1_').Update(visible=True)
     # window.FindElement('_OUTPUT_').Update(matches_result)
     # for match in matches:
@@ -102,6 +112,9 @@ end_time = None
 
 fig, figure_x, figure_y, figure_w, figure_h = create_figure(0, image_width, image_height)
 fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+
+# fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load("/Users/smriti/Desktop/MIT/Meng/Thesis/dtw-for-classical-music-prod/audio/search_testing/db/mozart_eine_kleine1.wav", offset=46.625668934240366, duration=6.315827664399087), image_width, image_height)
+# fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
 
 mixer.init(channels=2)
 query_channel = mixer.Channel(0)
@@ -168,6 +181,24 @@ while True:
     if search_system:
         window.Element('progbar').UpdateBar(search_system.get_progress())   
 
+    
+    if event == "Next":
+        if matches_display != None:
+            if len(matches_display) > 0:
+                matches_index += 1
+                if matches_index == len(matches_display):
+                    matches_index = 0
+                print(matches_index)
+                current_match = matches_display[matches_index]
+                current_wav = current_match[0]
+                current_offset = float(current_match[1])
+                current_duration = float(current_match[2]) - float(current_match[1])
+                print("redrawing")
+                print(current_wav)
+                print(current_offset)
+                print(current_duration)
+                fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], image_width, image_height)
+                fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
 
     # if event == "Play" and is_wav(query_wav):
     #     if paused:
@@ -189,10 +220,6 @@ while True:
     #             query_channel.play(s)
     #     # mixer.music.load(query_wav)
     #     # mixer.music.play()
-
-
-    if matches_display:
-        window.FindElement('__matches_tab__').Update("woohoo")
 
     if event == "Play" and is_wav(query_wav):
 
@@ -272,6 +299,8 @@ while True:
         query_start = time_to_secs(values['__start_mins__'], values['__start_secs__'])
         query_end = time_to_secs(values['__end_mins__'], values['__end_secs__'])
         
+        matches_display = []
+
         print(query_start, query_end)
         search_system = AudioSearchSystem(query_wav, query_start, query_end, db, num_matches, whole=(query_end == query_start))
 
