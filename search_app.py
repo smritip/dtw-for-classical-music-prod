@@ -10,48 +10,88 @@ from audio_search_system import AudioSearchSystem
 from display_wav import create_figure, draw_figure
 from constants import *
 
-global search_system
+global search_system, matches_display, matches_index
 
 # UI elements
 image_width = 3
 image_height = 1.5
 
+## TODO: offset and duration not on for match results
+
 layout = [[sg.Text('')],
           [sg.Text('Audio Search System', font=("Helvetica", 20))],
           [sg.Text('')],      
-          [sg.Text('Path to query wav file:', size=(16, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1), key="__query__"), sg.FileBrowse()],
+          [sg.Text('Path to query wav file:', size=(16, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1), key="__query__"), sg.FileBrowse(initial_folder=os.getcwd())],
           [sg.Text('Start time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__start_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__start_secs__"), sg.Text('', size=(5, 1)),
            sg.Text('End time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_secs__")],
+          [sg.Text('Folder with wav files to search through:', size=(28, 1), font=("Helvetica", 12)), sg.InputText(key="__db__"), sg.FolderBrowse(initial_folder=os.getcwd())],
+          [sg.Text('Number of matches to find (per file):', size=(28, 1), font=("Helvetica", 12)), sg.InputText(key="__num__")],
+          [sg.ReadButton("Search"), sg.Cancel()],
+          [sg.ProgressBar(1, orientation='h', size=(30, 15), key='progbar')],
+          [sg.Text('', size=(2, 1))],
+          [sg.TabGroup([[sg.Tab('Query', [[sg.Text('Select file above', size=(30, 1), font=("Helvetica", 12), key='__query_tab__')]]),
+                         sg.Tab('Matches', [[sg.Text('Run search above', size=(30, 1), font=("Helvetica", 12), key='__matches_tab__'), sg.Button("Prev", key="Prev"), sg.ReadButton("Next", key="Next")]])]])],
+          # [sg.ReadButton("View Query"), sg.ReadButton("View Matches")],
+          # [sg.Button("Prev", key="Prev"), sg.ReadButton("Next", key="Next")],
           [sg.Canvas(size=(image_width*100, image_height*100), key='canvas'),
            sg.ReadButton('', image_filename='icons/play_reduced.png', image_size=(30, 30), border_width=0, key='Play'),
            sg.ReadButton('', image_filename='icons/pause_reduced.png', image_size=(30, 30), border_width=0, key='Pause'),
            sg.ReadButton('', image_filename='icons/rewind_reduced.png', image_size=(30, 30), border_width=0, key='Rewind')],
-          [sg.Text('Folder with wav files to search through:', size=(28, 1), font=("Helvetica", 12)), sg.InputText(key="__db__"), sg.FolderBrowse()],
-          [sg.Text('Number of matches to find (per file):', size=(28, 1), font=("Helvetica", 12)), sg.InputText(key="__num__")],
-          [sg.ReadButton("Search"), sg.Cancel(), sg.ReadButton("Close Window")],
-          [sg.Text('', size=(2, 1))],
-          [sg.ProgressBar(1, orientation='h', size=(60, 18), key='progbar')],
-          [sg.Text('Matches:', font=("Helvetica", 12))],
-          [sg.Text('', size=(50, 18), font=("Helvetica", 14), key='_OUTPUT_')]]
+           [sg.Button("Close Window")]]
 
 window = sg.Window('Audio Search System').Layout(layout).Finalize() 
+
+window.FindElement('Prev').Update(visible=True)
+window.FindElement('Next').Update(visible=True)
 
 # App logic
 
 search_system = None
+matches_display = None
+matches_index = 0
+
+
+# {'/Users/smriti/Desktop/MIT/Meng/Thesis/dtw-for-classical-music-prod/audio/search_testing/db/mozart_eine_kleine1.wav': [(45.97551020408163, 51.82693877551021), (139.59836734693877, 144.98539682539683)]}
 
 def run_search():
     print("\nSearching")
     matches = search_system.search()
     matches_result = search_system.print_matches(matches)
-    window.FindElement('_OUTPUT_').Update(matches_result)
+    # matches_display = []
+    # for match in matches:
+    #     for cut in match:
+    #         matches_display.append([match, cut[0], cut[1]])
+
+    print(matches_display)
+    # window.FindElement('_match1_').Update(visible=True)
+    # window.FindElement('_OUTPUT_').Update(matches_result)
+    # for match in matches:
+    #     for i in range(len(matches[match])):
+    #         cut = matches[match][i]
+    #         print(match, cut)
+    #         # layout.append([sg.Text(match + " : " + str(cut[0]))])
+    #         # layout.append([sg.Canvas(size=(image_width*100, image_height*100), key=match+i+'canvas'),
+    #         #    sg.ReadButton('', image_filename='icons/play_reduced.png', image_size=(30, 30), border_width=0, key=match+i+'Play'),
+    #         #    sg.ReadButton('', image_filename='icons/pause_reduced.png', image_size=(30, 30), border_width=0, key=match+i+'Pause'),
+    #         #    sg.ReadButton('', image_filename='icons/rewind_reduced.png', image_size=(30, 30), border_width=0, key=match+i+'Rewind')])
+    #         # window = sg.Window('Audio Search System').Layout(layout).Finalize()
+    #         # fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(query_wav, offset=cut[0], duration=(cut[1] - cut[0]))[0], image_width, image_height)
+    #         # fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+
 
 def is_wav(file):
     return file[-4:] == ".wav"
 
 def time_to_secs(mins, secs):
+    if mins == '':
+        mins = 0
+    if secs == '':
+        secs = 0
     return (int(mins) * 60) + int(secs)
 
+def get_wav_name(file):
+    wav_path_parts = file.split("/")
+    return wav_path_parts[-1].split(".")[0]
 
 # initializations
 query_wav = ""
@@ -82,6 +122,7 @@ while True:
   
     if values['__query__'] != query_wav:  # new query wav, so reload wav file
         query_wav = values['__query__']
+        window.FindElement('__query_tab__').Update(get_wav_name(query_wav))
         fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(query_wav)[0], width=image_width, height=image_height, vlines=0)
         fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
         paused = False  ## TODO: check this      
@@ -148,6 +189,10 @@ while True:
     #             query_channel.play(s)
     #     # mixer.music.load(query_wav)
     #     # mixer.music.play()
+
+
+    if matches_display:
+        window.FindElement('__matches_tab__').Update("woohoo")
 
     if event == "Play" and is_wav(query_wav):
 
@@ -223,8 +268,12 @@ while True:
         for file in os.listdir(db_dir):
             if file.endswith(".wav"):
                 db.append(db_dir + "/" + file)
+
+        query_start = time_to_secs(values['__start_mins__'], values['__start_secs__'])
+        query_end = time_to_secs(values['__end_mins__'], values['__end_secs__'])
         
-        search_system = AudioSearchSystem(query_wav, db, num_matches)
+        print(query_start, query_end)
+        search_system = AudioSearchSystem(query_wav, query_start, query_end, db, num_matches, whole=(query_end == query_start))
 
         search_thread = thread_with_trace(target = run_search)
         search_thread.start()
@@ -233,7 +282,7 @@ while True:
         window.Element('progbar').UpdateBar(0)
         if search_system:
             search_system = None
-            window.FindElement('_OUTPUT_').Update("")
+            # window.FindElement('_OUTPUT_').Update("")
             search_thread.kill() 
             search_thread.join() 
             if not search_thread.isAlive():

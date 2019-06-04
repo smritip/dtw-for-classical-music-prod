@@ -6,10 +6,10 @@ import numpy as np
 import librosa
 from constants import *
 
-def wav_to_chroma(path_to_wav_file):
+def wav_to_chroma(path_to_wav_file, offset=0.0, duration=None):
 
 	# generate wav using librosa
-	wav, wav_fs = librosa.load(path_to_wav_file)
+	wav, wav_fs = librosa.load(path_to_wav_file, offset=offset, duration=duration)
 	assert(wav_fs == fs)
 
 	# create chroma (STFT --> spectrogram --> chromagram)

@@ -13,6 +13,7 @@
 # TODO(smritip): do we want to run on each db file, or combine and run on larger one
 # TODO(smritip): do we want to build up db for a project and then just have queries after
 # TODO(smritip): specify or calculate matches per file (maybe based on length)
+# TODO(smritip): do not repeat query in results
 
 import numpy as np
 from constants import *
@@ -21,8 +22,11 @@ from dsp.chroma import wav_to_chroma
 
 class AudioSearchSystem():
 
-	def __init__(self, query_wav, db, num_matches=5):
+	def __init__(self, query_wav, query_start, query_end, db, num_matches=5, whole=False):
 		self.query_wav = query_wav
+		self.query_start = query_start
+		self.whole = whole
+		self.query_end = query_end
 		self.db = db
 		self.num_matches = num_matches  ## per file matches
 		self.progress = 0
@@ -35,7 +39,10 @@ class AudioSearchSystem():
 		
 		self.progress += 1
 
-		chroma_query = wav_to_chroma(self.query_wav)
+		if self.whole:
+			chroma_query = wav_to_chroma(self.query_wav, offset=0.0, duration=None)
+		else:
+			chroma_query = wav_to_chroma(self.query_wav, offset=self.query_start, duration=(self.query_end-self.query_start))
 
 		matches_dict = {}
 
