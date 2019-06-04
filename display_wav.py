@@ -32,7 +32,7 @@ def create_figure(wav_file, width=2, height=2, vlines=None, ymin=-1, ymax=1):
 	# figure_w, figure_h = width, height
 
 	# print(figure_w, figure_h)
-	return fig, figure_x, figure_y, figure_w, figure_h
+	return fig
 
 
 def draw_figure(canvas, figure, loc=(0, 0)):

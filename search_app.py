@@ -10,7 +10,7 @@ from audio_search_system import AudioSearchSystem
 from display_wav import create_figure, draw_figure
 from constants import *
 
-global search_system, matches_display, matches_index
+global search_system, matches_display, matches_index, search_thread
 
 # UI elements
 image_width = 3
@@ -49,7 +49,7 @@ window.FindElement('Next').Update(visible=True)
 search_system = None
 matches_display = None
 matches_index = 0
-
+search_thread = None
 
 # {'/Users/smriti/Desktop/MIT/Meng/Thesis/dtw-for-classical-music-prod/audio/search_testing/db/mozart_eine_kleine1.wav': [(45.97551020408163, 51.82693877551021), (139.59836734693877, 144.98539682539683)]}
 
@@ -71,8 +71,9 @@ def run_search():
     print(current_wav)
     print(current_offset)
     print(current_duration)
-    fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], image_width, image_height)
-    fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+    # fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0)
+    # fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], image_width, image_height)
+    # fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
     # window.FindElement('_match1_').Update(visible=True)
     # window.FindElement('_OUTPUT_').Update(matches_result)
     # for match in matches:
@@ -110,8 +111,12 @@ duration = None
 start_time = None
 end_time = None
 
-fig, figure_x, figure_y, figure_w, figure_h = create_figure(0, image_width, image_height)
-fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+def draw_wav(wav, vlines=None):
+    fig = create_figure(wav, image_width, image_height, vlines)
+    fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+    return fig, fig_photo
+
+fig, fig_photo = draw_wav(0)
 
 # fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load("/Users/smriti/Desktop/MIT/Meng/Thesis/dtw-for-classical-music-prod/audio/search_testing/db/mozart_eine_kleine1.wav", offset=46.625668934240366, duration=6.315827664399087), image_width, image_height)
 # fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
@@ -136,10 +141,15 @@ while True:
     if values['__query__'] != query_wav:  # new query wav, so reload wav file
         query_wav = values['__query__']
         window.FindElement('__query_tab__').Update(get_wav_name(query_wav))
-        fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(query_wav)[0], width=image_width, height=image_height, vlines=0)
-        fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+        # fig = create_figure(librosa.load(query_wav)[0], width=image_width, height=image_height, vlines=0)
+        # fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+        fig, fig_photo = draw_wav(librosa.load(query_wav)[0], vlines=0)
         paused = False  ## TODO: check this      
         
+    if search_thread:
+        if search_thread.is_alive():
+            print("running search")
+
     if query_wav != "":
         if values['__start_secs__'] != "":
             start_secs = values['__start_secs__']
@@ -156,8 +166,9 @@ while True:
                     if end_time > start_time:
                         duration = end_time - start_time
                 print(offset, duration)
-                fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(query_wav, offset=offset, duration=duration)[0], width=image_width, height=image_height, vlines=0)
-                fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+                # fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(query_wav, offset=offset, duration=duration)[0], width=image_width, height=image_height, vlines=0)
+                # fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+                fig, fig_photo = draw_wav(librosa.load(query_wav, offset=offset, duration=duration)[0], vlines=0)
                 paused = False
 
         if values['__end_secs__'] != "":
@@ -174,21 +185,22 @@ while True:
                     if end_time > start_time:
                         duration = end_time - start_time
                         print(offset, duration)
-                        fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(query_wav, offset=offset, duration=duration)[0], width=image_width, height=image_height, vlines=0)
-                        fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+                        # fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(query_wav, offset=offset, duration=duration)[0], width=image_width, height=image_height, vlines=0)
+                        # fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+                        fig, fig_photo = draw_wav(librosa.load(query_wav, offset=offset, duration=duration)[0], vlines=0)
                         paused = False
 
     if search_system:
         window.Element('progbar').UpdateBar(search_system.get_progress())   
 
-    
+
     if event == "Next":
         if matches_display != None:
             if len(matches_display) > 0:
                 matches_index += 1
                 if matches_index == len(matches_display):
                     matches_index = 0
-                print(matches_index)
+                print("index", matches_index)
                 current_match = matches_display[matches_index]
                 current_wav = current_match[0]
                 current_offset = float(current_match[1])
@@ -197,8 +209,8 @@ while True:
                 print(current_wav)
                 print(current_offset)
                 print(current_duration)
-                fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], image_width, image_height)
-                fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+                # fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], image_width, image_height)
+                # fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
 
     # if event == "Play" and is_wav(query_wav):
     #     if paused:
@@ -273,6 +285,7 @@ while True:
         print(channel_current_time)
         # fig, figure_x, figure_y, figure_w, figure_h = create_figure(librosa.load(query_wav, offset=offset, duration=duration)[0], width=image_width, height=image_height, vlines=music_playhead)
         # fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+        fig, fig_photo = draw_wav(librosa.load(query_wav, offset=offset, duration=duration)[0], vlines=music_playhead)
 
     if event == "Search":
 
