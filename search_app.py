@@ -19,8 +19,9 @@ max_num_matches = 5
 ## TODO: resize text
 ## TODO: enforce max of 50
 ## TODO: deal with 0 matches?
+## TODO: display mm:ss instead of secs in now playing
 
-matches_column = [[sg.ReadButton("View Query", key="View Query")], [sg.Text("\nMatches:")]]
+matches_column = [[sg.Text("\nMatches:")]]
 
 for i in range(max_num_matches):
     matches_column.append([sg.Text("Match", size=(35, 1), key="match"+str(i)), sg.ReadButton("View", key="view"+str(i), disabled=True)])
@@ -36,7 +37,7 @@ media_player = [[sg.Canvas(size=(image_width*100, image_height*100), key='canvas
 layout = [[sg.Text('')],
           [sg.Text('Audio Search System', font=("Helvetica", 20))],
           [sg.Text('')],      
-          [sg.Text('Path to query wav file:', size=(16, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1), key="__query__"), sg.FileBrowse(initial_folder=os.getcwd())],
+          [sg.Text('Path to query wav file:', size=(16, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1), key="__query__"), sg.FileBrowse(initial_folder=os.getcwd()), sg.ReadButton("View Query", key="View Query")],
           [sg.Text('Start time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__start_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__start_secs__"), sg.Text('', size=(5, 1)),
            sg.Text('End time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_secs__")],
           [sg.Text('Folder with wav files to search through:', size=(28, 1), font=("Helvetica", 12)), sg.InputText(key="__db__"), sg.FolderBrowse(initial_folder=os.getcwd())],
@@ -71,7 +72,7 @@ def run_search():
     
     for match in matches:
         for cut in matches[match]:
-            matches_display.append([get_wav_name(match), cut[0], cut[1]])
+            matches_display.append([match, cut[0], cut[1]])
     print(matches_display)
     matches_index = 0
     # num_pages = math.ceil(len(matches_display) / max_num_matches)
@@ -89,6 +90,10 @@ def time_to_secs(mins, secs):
     if secs == '':
         secs = 0
     return (float(mins) * 60) + float(secs)
+
+def secs_to_mins(secs):
+    secs = int(secs)
+    return int(secs/60), secs % 60
 
 def get_wav_name(file):
     wav_path_parts = file.split("/")
@@ -118,7 +123,7 @@ while True:
         if values['__query__'] != query_wav:  # new query wav, so reload wav file
             query_wav = values['__query__']
             fig, fig_photo = draw_wav(librosa.load(query_wav)[0], vlines=0)
-            window.Element('__now_playing__').Update("Now Playing: " + get_wav_name(query_wav))
+            window.Element('__now_playing__').Update("Now Playing: " + get_wav_name(query_wav) + ": 0.00 - 0.00")
             now_playing = query_wav
             paused = False  ## TODO: check this
     else:
@@ -138,7 +143,10 @@ while True:
             offset = new_offset
             duration = new_duration
             fig, fig_photo = draw_wav(librosa.load(query_wav, offset=offset, duration=duration)[0], vlines=0)
-            window.Element('__now_playing__').Update("Now Playing: " + get_wav_name(query_wav))
+            start = ("{:0.2f}").format(offset)
+            end = ("{:0.2f}").format(offset + duration) if (duration is not None) else ''
+            display_text = get_wav_name(query_wav) + ": " + start + " - " + end
+            window.Element('__now_playing__').Update("Now Playing: " + display_text)
             now_playing = query_wav
 
     if matches_display:
@@ -146,7 +154,6 @@ while True:
         # TODO: optimize so not happening all the time, just on new pages
         # print(min(len(matches_display), max_num_matches))
         num_pages = math.ceil(len(matches_display) / max_num_matches)
-        print("num_pages is", num_pages)
 
         start_num_results = str((page_index * max_num_matches) + 1)
         if len(matches_display) > max_num_matches:
@@ -156,15 +163,15 @@ while True:
         window.Element('__matches_fraction__').Update(start_num_results + " - " + end_num_results + " of " + str(len(matches_display)))
 
         start_match_index = page_index * max_num_matches
-        for i in range(min(int(end_num_results) - int(start_num_results) + 1, max_num_matches)):
-            # TODO: update extra to blank if not full
-
-            # write match
+        for i in range(max_num_matches):
             index = start_match_index + i
-            display_text = get_wav_name(matches_display[index][0]) + ": " + ("{:0.2f}").format(matches_display[index][1]) + " - " + ("{:0.2f}").format(matches_display[index][2])
-            window.Element("match"+str(i)).Update(display_text)
-            # allow view
-            window.Element("view"+str(i)).Update(disabled=False)
+            if index >= len(matches_display):
+                window.Element("match"+str(i)).Update("Match")
+                window.Element("view"+str(i)).Update(disabled=True)
+            else:
+                display_text = get_wav_name(matches_display[index][0]) + ": " + ("{:0.2f}").format(matches_display[index][1]) + " - " + ("{:0.2f}").format(matches_display[index][2])
+                window.Element("match"+str(i)).Update(display_text)
+                window.Element("view"+str(i)).Update(disabled=False)
 
         
         
@@ -180,31 +187,79 @@ while True:
     
     # button click events
     if event == "view0":
-        match_index = page_index * num_matches
+        match_index = page_index * max_num_matches
         print(match_index)
+        current_match = matches_display[match_index]
+        current_wav = current_match[0]
+        print("updating with index", match_index)
+        current_offset = float(current_match[1])
+        current_duration = float(current_match[2] - current_match[1])
+        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0)
+        display_text = get_wav_name(current_wav) + ": " + ("{:0.2f}").format(current_offset) + " - " + ("{:0.2f}").format(current_offset + current_duration)
+        window.Element('__now_playing__').Update("Now Playing: " + display_text)
+        now_playing = current_wav
+
+        # display_text = get_wav_name(query_wav) + ": " + start + " - " + end
+        #     window.Element('__now_playing__').Update("Now Playing: " + display_text)
+        #     now_playing = query_wav
 
     if event == "view1":
-        match_index = (page_index * num_matches) + 1
+        match_index = (page_index * max_num_matches) + 1
         print(match_index)
+        current_match = matches_display[match_index]
+        current_wav = current_match[0]
+        print("updating with index", match_index)
+        current_offset = float(current_match[1])
+        current_duration = float(current_match[2] - current_match[1])
+        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0)
+        display_text = get_wav_name(current_wav) + ": " + ("{:0.2f}").format(current_offset) + " - " + ("{:0.2f}").format(current_offset + current_duration)
+        window.Element('__now_playing__').Update("Now Playing: " + display_text)
+        now_playing = current_wav
 
     if event == "view2":
-        match_index = (page_index * num_matches) + 2
+        match_index = (page_index * max_num_matches) + 2
         print(match_index)
+        current_match = matches_display[match_index]
+        current_wav = current_match[0]
+        print("updating with index", match_index)
+        current_offset = float(current_match[1])
+        current_duration = float(current_match[2] - current_match[1])
+        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0)
+        display_text = get_wav_name(current_wav) + ": " + ("{:0.2f}").format(current_offset) + " - " + ("{:0.2f}").format(current_offset + current_duration)
+        window.Element('__now_playing__').Update("Now Playing: " + display_text)
+        now_playing = current_wav
 
     if event == "view3":
-        match_index = (page_index * num_matches) + 3
+        match_index = (page_index * max_num_matches) + 3
         print(match_index)
+        current_match = matches_display[match_index]
+        current_wav = current_match[0]
+        print("updating with index", match_index)
+        current_offset = float(current_match[1])
+        current_duration = float(current_match[2] - current_match[1])
+        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0)
+        display_text = get_wav_name(current_wav) + ": " + ("{:0.2f}").format(current_offset) + " - " + ("{:0.2f}").format(current_offset + current_duration)
+        window.Element('__now_playing__').Update("Now Playing: " + display_text)
+        now_playing = current_wav
 
     if event == "view4":
-        match_index = (page_index * num_matches) + 4
+        match_index = (page_index * max_num_matches) + 4
         print(match_index)
+        current_match = matches_display[match_index]
+        current_wav = current_match[0]
+        print("updating with index", match_index)
+        current_offset = float(current_match[1])
+        current_duration = float(current_match[2] - current_match[1])
+        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0)
+        display_text = get_wav_name(current_wav) + ": " + ("{:0.2f}").format(current_offset) + " - " + ("{:0.2f}").format(current_offset + current_duration)
+        window.Element('__now_playing__').Update("Now Playing: " + display_text)
+        now_playing = current_wav
 
     if page_index == 0:
         window.Element('Prev').Update(disabled=True)
     else:
         window.Element('Prev').Update(disabled=False)
 
-    print(num_pages)
     if page_index == (num_pages - 1):
         window.Element('Next').Update(disabled=True)
     else: 
@@ -212,6 +267,7 @@ while True:
 
     if event == "Next":
         page_index += 1
+        print("page i", page_index)
         # start_num_results = (page_index * max_num_matches) + 1
         # end_num_results = min((len(matches_display) + 1) - max_num_matches, max_num_matches) + start_num_results
         # # window.Element('__matches_fraction__').Update(start_num_results + " - " + end_num_results + " of " + len(matches_display))
@@ -234,7 +290,7 @@ while True:
     if event == "View Query":
         query_wav = values['__query__'] 
         fig, fig_photo = draw_wav(librosa.load(query_wav)[0], vlines=0) 
-        window.Element('__now_playing__').Update("Now Playing: " + get_wav_name(query_wav))
+        window.Element('__now_playing__').Update("Now Playing: " + get_wav_name(query_wav) + ": 0.00 - 0.00")
         now_playing = query_wav
         paused = False  ## TODO: check this 
 
