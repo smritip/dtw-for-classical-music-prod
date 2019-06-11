@@ -16,8 +16,7 @@ image_height = 1.5
 max_num_matches = 5
 
 ## TODO: offset and duration not on for match results
-## TODO: resize text
-## TODO: enforce max of 50
+## TODO: auto-resize text to fit
 ## TODO: deal with 0 matches?
 ## TODO: display mm:ss instead of secs in now playing
 
@@ -26,7 +25,7 @@ matches_column = [[sg.Text("\nMatches:")]]
 for i in range(max_num_matches):
     matches_column.append([sg.Text("Match", size=(35, 1), key="match"+str(i)), sg.ReadButton("View", key="view"+str(i), disabled=True)])
 
-matches_column.append([sg.Button("Prev", key="Prev"), sg.ReadButton("Next", key="Next"), sg.Text("", key="__matches_fraction__")])
+matches_column.append([sg.Button("Prev", key="Prev"), sg.ReadButton("Next", key="Next"), sg.Text("", size=(30, 1), key="__matches_fraction__")])
 
 media_player = [[sg.Canvas(size=(image_width*100, image_height*100), key='canvas'),
                  sg.ReadButton('', image_filename='icons/play_reduced.png', image_size=(30, 30), border_width=0, key='Play'),
@@ -42,19 +41,17 @@ layout = [[sg.Text('')],
            sg.Text('End time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_secs__")],
           [sg.Text('Folder with wav files to search through:', size=(28, 1), font=("Helvetica", 12)), sg.InputText(key="__db__"), sg.FolderBrowse(initial_folder=os.getcwd())],
           [sg.Text('Number of matches to find (per file):', size=(28, 1), font=("Helvetica", 12)), sg.InputText(key="__num__")],
-          [sg.ReadButton("Search"), sg.Cancel()],
+          [sg.ReadButton("Search", key="Search"), sg.Cancel()],
           [sg.ProgressBar(1, orientation='h', size=(30, 15), key='progbar')],
           [sg.Text('', size=(2, 1))],
           [sg.Column(matches_column), sg.Column(media_player)],
-          # [sg.TabGroup([[sg.Tab('Query', [[sg.Text('Select file above', size=(30, 1), font=("Helvetica", 12), key='__query_tab__')]]),
-          #                sg.Tab('Matches', [[sg.Text('Run search above', size=(30, 1), font=("Helvetica", 12), key='__matches_tab__'), sg.Button("Prev", key="Prev"), sg.ReadButton("Next", key="Next")]])]], key="__tabs__"), sg.Column(media_player)],
-           [sg.Button("Close Window")]]
+          [sg.Text('', size=(2, 1))],
+          [sg.Button("Close Window")],
+          [sg.Text('', size=(2, 1))]]
 
 
 window = sg.Window('Audio Search System').Layout(layout).Finalize() 
 
-# for i in range(max_num_matches):
-#     window.FindElement('view'+str(i)).Update(visible=False)
 
 # App logic
 
@@ -75,11 +72,8 @@ def run_search():
             matches_display.append([match, cut[0], cut[1]])
     print(matches_display)
     matches_index = 0
-    # num_pages = math.ceil(len(matches_display) / max_num_matches)
-    # print("changing", num_pages)
 
 # helper functions
-# 46.625668934240366, 52.94149659863945
 
 def is_wav(file):
     return file[-4:] == ".wav"
@@ -117,6 +111,9 @@ while True:
 
     event, values = window.Read(timeout=100)
 
+    # TODO: user input checks (valid wav file, valid folder, valid number of matches)
+    # TODO: default of number of matches?
+
     # query wav visualization (and user input checks)
     if is_wav(values['__query__']):
         window.Element('View Query').Update(disabled=False)
@@ -152,7 +149,6 @@ while True:
     if matches_display:
 
         # TODO: optimize so not happening all the time, just on new pages
-        # print(min(len(matches_display), max_num_matches))
         num_pages = math.ceil(len(matches_display) / max_num_matches)
 
         start_num_results = str((page_index * max_num_matches) + 1)
@@ -173,17 +169,6 @@ while True:
                 window.Element("match"+str(i)).Update(display_text)
                 window.Element("view"+str(i)).Update(disabled=False)
 
-        
-        
-        # current_match = matches_display[matches_index]
-        # current_wav = current_match[0]
-        # if current_wav != now_playing:
-        #     print("updating with index", matches_index)
-        #     current_offset = float(current_match[1])
-        #     current_duration = float(current_match[2] - current_match[1])
-        #     fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0)
-        #     now_playing = current_wav
-
     
     # button click events
     if event == "view0":
@@ -199,9 +184,6 @@ while True:
         window.Element('__now_playing__').Update("Now Playing: " + display_text)
         now_playing = current_wav
 
-        # display_text = get_wav_name(query_wav) + ": " + start + " - " + end
-        #     window.Element('__now_playing__').Update("Now Playing: " + display_text)
-        #     now_playing = query_wav
 
     if event == "view1":
         match_index = (page_index * max_num_matches) + 1
@@ -268,9 +250,6 @@ while True:
     if event == "Next":
         page_index += 1
         print("page i", page_index)
-        # start_num_results = (page_index * max_num_matches) + 1
-        # end_num_results = min((len(matches_display) + 1) - max_num_matches, max_num_matches) + start_num_results
-        # # window.Element('__matches_fraction__').Update(start_num_results + " - " + end_num_results + " of " + len(matches_display))
         start_num_results = str((page_index * max_num_matches) + 1)
         if len(matches_display) > max_num_matches:
             end_num_results = str(min((len(matches_display) + 1) - max_num_matches, max_num_matches) + int(start_num_results) - 1)
@@ -293,11 +272,6 @@ while True:
         window.Element('__now_playing__').Update("Now Playing: " + get_wav_name(query_wav) + ": 0.00 - 0.00")
         now_playing = query_wav
         paused = False  ## TODO: check this 
-
-    if event == "Next":
-        matches_index += 1
-        if matches_index == len(matches_display):
-            matches_index = 0
 
     if event == "Search":
         
