@@ -15,7 +15,7 @@ import librosa
 
 from matplotlib.ticker import NullFormatter  # useful for `logit` scale
 
-def create_figure(wav_file, width=2, height=2, vlines=None, ymin=-1, ymax=1):
+def create_figure(wav_file, width=2, height=2, vlines=None, ymin=-1, ymax=1):  ## todo: scale ymin/ymax to song
 	# plt.figure(figsize=(width,height))
 	plt.figure(figsize=(width, height))
 	plt.plot(wav_file)

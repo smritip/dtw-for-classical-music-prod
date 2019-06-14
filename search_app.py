@@ -2,25 +2,39 @@ import PySimpleGUI as sg
 import os
 import librosa
 import math
+import tempfile
+
+import time
+
+from pygame import mixer
+
+from pydub import AudioSegment
 
 from app_threading import thread_with_trace
 from audio_search_system import AudioSearchSystem
 from display_wav import create_figure, draw_figure
 from constants import *
 
-global search_system, matches_display, matches_index, now_playing, page_index, num_pages, current_matches_display
+global search_system, matches_display, matches_index, now_playing, page_index, num_pages, current_matches_display, media_start_time, media_end_time, paused, rewind, mp3_fd, now_playing_mp3_path
 
 # UI elements
 image_width = 3
 image_height = 1.5
 max_num_matches = 5
 
+mp3_fd = None
+now_playing_mp3_path = None
+
 ## TODO: offset and duration not on for match results
 ## TODO: auto-resize text to fit
 ## TODO: deal with 0 matches?
 ## TODO: display mm:ss instead of secs in now playing
 
-## TODO: resetting matches
+## TODO: matplotlib max figures
+
+## TODO: move back playhead
+
+## TODO: see if necessary to both remove path and close fd
 
 matches_column = [[sg.Text("\nMatches:")]]
 
@@ -64,6 +78,12 @@ now_playing = None
 page_index = 0
 num_pages = 1
 current_matches_display = None
+
+mixer.init()
+media_start_time = None
+media_end_time = None
+paused = False
+rewind = False
 
 def run_search():
     print("\nSearching")
@@ -116,8 +136,8 @@ while True:
 
     event, values = window.Read(timeout=100)
 
-    if now_playing:
-        print(get_wav_name(now_playing), offset, duration)
+    # if now_playing:
+    #     print(get_wav_name(now_playing), offset, duration)
 
     # TODO: user input checks (valid wav file, valid folder, valid number of matches)
     # TODO: default of number of matches?
@@ -127,7 +147,7 @@ while True:
         window.Element('View Query').Update(disabled=False)
         if values['__query__'] != query_wav:  # new query wav, so reload wav file
             query_wav = values['__query__']
-            fig, fig_photo = draw_wav(librosa.load(query_wav)[0], vlines=0)
+            fig, fig_photo = draw_wav(librosa.load(query_wav)[0], vlines=0.01)
             window.Element('__now_playing__').Update("Now Playing: " + get_wav_name(query_wav) + ": 0.00 - [end] seconds")
             now_playing = query_wav
             paused = False  ## TODO: check this
@@ -153,12 +173,13 @@ while True:
             query_duration = new_duration
             offset = new_offset
             duration = new_duration
-            fig, fig_photo = draw_wav(librosa.load(query_wav, offset=offset, duration=duration)[0], vlines=0)
+            fig, fig_photo = draw_wav(librosa.load(query_wav, offset=offset, duration=duration)[0], vlines=0.01)
             start = ("{:0.2f}").format(offset)
             end = ("{:0.2f}").format(offset + duration) if (duration is not None) else '[end]'
             display_text = get_wav_name(query_wav) + ": " + start + " - " + end
             window.Element('__now_playing__').Update("Now Playing: " + display_text + " seconds")
             now_playing = query_wav
+            paused = False
 
     if matches_display:
 
@@ -200,10 +221,11 @@ while True:
         print("updating with index", match_index)
         current_offset = float(current_match[1])
         current_duration = float(current_match[2] - current_match[1])
-        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0)
+        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0.01)
         display_text = get_wav_name(current_wav) + ": " + ("{:0.2f}").format(current_offset) + " - " + ("{:0.2f}").format(current_offset + current_duration)
         window.Element('__now_playing__').Update("Now Playing: " + display_text + "  seconds")
         now_playing = current_wav
+        paused = False
         offset = current_offset
         duration = current_duration
 
@@ -216,10 +238,11 @@ while True:
         print("updating with index", match_index)
         current_offset = float(current_match[1])
         current_duration = float(current_match[2] - current_match[1])
-        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0)
+        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0.01)
         display_text = get_wav_name(current_wav) + ": " + ("{:0.2f}").format(current_offset) + " - " + ("{:0.2f}").format(current_offset + current_duration)
         window.Element('__now_playing__').Update("Now Playing: " + display_text + "  seconds")
         now_playing = current_wav
+        paused = False
         offset = current_offset
         duration = current_duration
 
@@ -231,10 +254,11 @@ while True:
         print("updating with index", match_index)
         current_offset = float(current_match[1])
         current_duration = float(current_match[2] - current_match[1])
-        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0)
+        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0.01)
         display_text = get_wav_name(current_wav) + ": " + ("{:0.2f}").format(current_offset) + " - " + ("{:0.2f}").format(current_offset + current_duration)
         window.Element('__now_playing__').Update("Now Playing: " + display_text + "  seconds")
         now_playing = current_wav
+        paused = False
         offset = current_offset
         duration = current_duration
 
@@ -246,10 +270,11 @@ while True:
         print("updating with index", match_index)
         current_offset = float(current_match[1])
         current_duration = float(current_match[2] - current_match[1])
-        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0)
+        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0.01)
         display_text = get_wav_name(current_wav) + ": " + ("{:0.2f}").format(current_offset) + " - " + ("{:0.2f}").format(current_offset + current_duration)
         window.Element('__now_playing__').Update("Now Playing: " + display_text + "  seconds")
         now_playing = current_wav
+        paused = False
         offset = current_offset
         duration = current_duration
 
@@ -261,10 +286,11 @@ while True:
         print("updating with index", match_index)
         current_offset = float(current_match[1])
         current_duration = float(current_match[2] - current_match[1])
-        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0)
+        fig, fig_photo = draw_wav(librosa.load(current_wav, offset=current_offset, duration=current_duration)[0], vlines=0.01)
         display_text = get_wav_name(current_wav) + ": " + ("{:0.2f}").format(current_offset) + " - " + ("{:0.2f}").format(current_offset + current_duration)
         window.Element('__now_playing__').Update("Now Playing: " + display_text + "  seconds")
         now_playing = current_wav
+        paused = False
         offset = current_offset
         duration = current_duration
 
@@ -299,7 +325,7 @@ while True:
 
     if event == "View Query":
         query_wav = values['__query__'] 
-        fig, fig_photo = draw_wav(librosa.load(query_wav)[0], vlines=0)
+        fig, fig_photo = draw_wav(librosa.load(query_wav)[0], vlines=0.01)
         offset = 0.0
         duration = None 
         # query_offset = 0.0
@@ -307,6 +333,60 @@ while True:
         window.Element('__now_playing__').Update("Now Playing: " + get_wav_name(query_wav) + ": 0.00 - [end] seconds")
         now_playing = query_wav
         paused = False  ## TODO: check this 
+
+    if event == "Play" and now_playing and is_wav(now_playing):
+
+        if paused:
+            mixer.music.unpause()
+            media_start_time = time.time() - (media_end_time - media_start_time)
+            media_end_time = None
+            paused = False
+        # if rewind:
+        #     mixer.music.unpause()
+        #     rewind = False
+        else:
+            if now_playing_mp3_path:
+                os.remove(now_playing_mp3_path)
+            if mp3_fd:
+                os.close(mp3_fd)
+            mp3_fd, now_playing_mp3_path = tempfile.mkstemp(suffix=".mp3")
+            # print(now_playing_mp3_path)
+            AudioSegment.from_wav(now_playing).export(now_playing_mp3_path, format="mp3")
+            mixer.music.load(now_playing_mp3_path)
+            # print(offset)
+            mixer.music.play(start=(offset*2))  # todo: figure out why *2 necessary for this format
+            media_start_time = time.time()
+            media_end_time = None
+
+    if mixer.music.get_busy():
+        if duration:
+            if mixer.music.get_pos() / 1000 >= duration:
+                mixer.music.stop()
+
+    if event == "Pause":
+        if mixer.music.get_busy():
+            paused = True
+            media_end_time = time.time()
+            mixer.music.pause()
+
+    if event == "Rewind" and is_wav(now_playing):
+        mixer.music.stop()
+        # media_start_time = time.time()
+        # media_end_time = time.time()
+        paused = False
+        print("redraw")
+        # fig, fig_photo = draw_wav(librosa.load(now_playing, offset=offset, duration=duration)[0], vlines=0.01)
+        
+
+    if mixer.music.get_busy():
+        if media_end_time:
+            media_current_time = media_end_time - media_start_time
+        else:
+            media_current_time = time.time() - media_start_time
+        music_playhead = media_current_time * fs
+        # print(media_current_time)
+        fig, fig_photo = draw_wav(librosa.load(now_playing, offset=offset, duration=duration)[0], vlines=music_playhead)
+
 
     if event == "Search":
         
@@ -344,5 +424,9 @@ while True:
     if search_system:
         window.Element('progbar').UpdateBar(search_system.get_progress())   
 
+if now_playing_mp3_path:
+    os.remove(now_playing_mp3_path)
+if mp3_fd:
+    os.close(mp3_fd)
 
 window.Close()
