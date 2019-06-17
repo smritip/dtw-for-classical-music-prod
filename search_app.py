@@ -25,16 +25,10 @@ max_num_matches = 5
 mp3_fd = None
 now_playing_mp3_path = None
 
-## TODO: offset and duration not on for match results
 ## TODO: auto-resize text to fit
 ## TODO: deal with 0 matches?
 ## TODO: display mm:ss instead of secs in now playing
-
-## TODO: matplotlib max figures
-
 ## TODO: move back playhead
-
-## TODO: see if necessary to both remove path and close fd
 
 matches_column = [[sg.Text("\nMatches:")]]
 
@@ -52,9 +46,10 @@ media_player = [[sg.Canvas(size=(image_width*100, image_height*100), key='canvas
 layout = [[sg.Text('')],
           [sg.Text('Audio Search System', font=("Helvetica", 20))],
           [sg.Text('')],      
-          [sg.Text('Path to query wav file:', size=(16, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1), key="__query__"), sg.FileBrowse(initial_folder=os.getcwd()), sg.ReadButton("View Query", key="View Query")],
+          [sg.Text('Path to query wav file:', size=(16, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1), key="__query__"), sg.FileBrowse(initial_folder=os.getcwd())],
           [sg.Text('Start time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__start_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__start_secs__"), sg.Text('', size=(5, 1)),
-           sg.Text('End time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_secs__")],
+           sg.Text('End time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_secs__"), sg.Text('', size=(18, 1)),
+           sg.ReadButton("View Query", key="View Query")],
           [sg.Text('Folder with wav files to search through:', size=(28, 1), font=("Helvetica", 12)), sg.InputText(key="__db__"), sg.FolderBrowse(initial_folder=os.getcwd())],
           [sg.Text('Number of matches to find (per file):', size=(28, 1), font=("Helvetica", 12)), sg.InputText(key="__num__")],
           [sg.ReadButton("Search", key="Search"), sg.Cancel()],
@@ -127,7 +122,7 @@ def draw_wav(wav, vlines=None):
 query_wav = ""
 offset = 0.0
 duration = None
-query_offset = 0.0
+query_offset = 0.0  ## todo: clean this up
 query_duration = 0.0
 
 fig, fig_photo = draw_wav(0)
@@ -136,50 +131,15 @@ while True:
 
     event, values = window.Read(timeout=100)
 
-    # if now_playing:
-    #     print(get_wav_name(now_playing), offset, duration)
-
     # TODO: user input checks (valid wav file, valid folder, valid number of matches)
     # TODO: default of number of matches?
 
     # query wav visualization (and user input checks)
     if is_wav(values['__query__']):
         window.Element('View Query').Update(disabled=False)
-        if values['__query__'] != query_wav:  # new query wav, so reload wav file
-            query_wav = values['__query__']
-            fig, fig_photo = draw_wav(librosa.load(query_wav)[0], vlines=0.01)
-            window.Element('__now_playing__').Update("Now Playing: " + get_wav_name(query_wav) + ": 0.00 - [end] seconds")
-            now_playing = query_wav
-            paused = False  ## TODO: check this
-            query_offset = 0.0
-            query_duration = None
-            offset = 0.0
-            duration = None
     else:
         window.Element('View Query').Update(disabled=True)
 
-    # offset and duration
-    if query_wav != "":
-        start = time_to_secs(values['__start_mins__'], values['__start_secs__'])
-        new_offset = start
-        end = time_to_secs(values['__end_mins__'], values['__end_secs__'])
-        if end == 0:
-            new_duration = None
-        else:
-            new_duration = time_to_secs(values['__end_mins__'], values['__end_secs__']) - new_offset
-        if (new_offset != query_offset) or (new_duration != query_duration):
-            print(new_offset, new_duration)
-            query_offset = new_offset
-            query_duration = new_duration
-            offset = new_offset
-            duration = new_duration
-            fig, fig_photo = draw_wav(librosa.load(query_wav, offset=offset, duration=duration)[0], vlines=0.01)
-            start = ("{:0.2f}").format(offset)
-            end = ("{:0.2f}").format(offset + duration) if (duration is not None) else '[end]'
-            display_text = get_wav_name(query_wav) + ": " + start + " - " + end
-            window.Element('__now_playing__').Update("Now Playing: " + display_text + " seconds")
-            now_playing = query_wav
-            paused = False
 
     if matches_display:
 
@@ -324,15 +284,28 @@ while True:
         window.Element('__matches_fraction__').Update(start_num_results + " - " + end_num_results + " of " + str(len(matches_display)))
 
     if event == "View Query":
-        query_wav = values['__query__'] 
-        fig, fig_photo = draw_wav(librosa.load(query_wav)[0], vlines=0.01)
-        offset = 0.0
-        duration = None 
-        # query_offset = 0.0
-        # query_duration = None
-        window.Element('__now_playing__').Update("Now Playing: " + get_wav_name(query_wav) + ": 0.00 - [end] seconds")
+        query_wav = values['__query__']
+        start = time_to_secs(values['__start_mins__'], values['__start_secs__'])
+        new_offset = start
+        end = time_to_secs(values['__end_mins__'], values['__end_secs__'])
+        if end == 0:
+            new_duration = None
+        else:
+            new_duration = time_to_secs(values['__end_mins__'], values['__end_secs__']) - new_offset
+        if (new_offset != query_offset) or (new_duration != query_duration):
+            print(new_offset, new_duration)
+            query_offset = new_offset
+            query_duration = new_duration
+            offset = new_offset
+            duration = new_duration
+        fig, fig_photo = draw_wav(librosa.load(query_wav, offset=offset, duration=duration)[0], vlines=0.01)
+        start = ("{:0.2f}").format(offset)
+        end = ("{:0.2f}").format(offset + duration) if (duration is not None) else '[end]'
+        display_text = get_wav_name(query_wav) + ": " + start + " - " + end
+        window.Element('__now_playing__').Update("Now Playing: " + display_text + " seconds")
         now_playing = query_wav
-        paused = False  ## TODO: check this 
+        paused = False
+
 
     if event == "Play" and now_playing and is_wav(now_playing):
 
@@ -349,12 +322,20 @@ while True:
                 os.remove(now_playing_mp3_path)
             if mp3_fd:
                 os.close(mp3_fd)
+            wav_fd, now_playing_wav_path = tempfile.mkstemp(suffix=".wav")
+            temp_wav, temp_wav_fs = librosa.load(now_playing, offset=offset, duration=duration)
+            print(now_playing_wav_path)
+            librosa.output.write_wav(now_playing_wav_path, temp_wav, fs)
             mp3_fd, now_playing_mp3_path = tempfile.mkstemp(suffix=".mp3")
             # print(now_playing_mp3_path)
-            AudioSegment.from_wav(now_playing).export(now_playing_mp3_path, format="mp3")
+            # AudioSegment.from_wav(now_playing).export(now_playing_mp3_path, format="mp3")
+            AudioSegment.from_wav(now_playing_wav_path).export(now_playing_mp3_path, format="mp3")
+            os.remove(now_playing_wav_path)
+            os.close(wav_fd)
             mixer.music.load(now_playing_mp3_path)
             # print(offset)
-            mixer.music.play(start=(offset*2))  # todo: figure out why *2 necessary for this format
+            # mixer.music.play(start=(offset*2))  # todo: figure out why *2 necessary for this format
+            mixer.music.play()
             media_start_time = time.time()
             media_end_time = None
 
