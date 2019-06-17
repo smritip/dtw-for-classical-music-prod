@@ -5,6 +5,8 @@ from automatic_marking_transfer import AutomaticMarkingTransfer
 
 global amt
 
+# TODO: multiple transfers with FilesBrowse()
+
 # UI elements
 layout = [[sg.Text('')],
 		  [sg.Text('Automatic Marking Transfer', font=("Helvetica", 20))],  ## TODO: center text with function
