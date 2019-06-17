@@ -30,7 +30,7 @@ def create_figure(wav_file, width=2, height=2, vlines=None, ymin=-1, ymax=1):  #
 	# fig.set_size_inches(width, height)
 	figure_x, figure_y, figure_w, figure_h = fig.bbox.bounds
 	# figure_w, figure_h = width, height
-
+	plt.close()
 	# print(figure_w, figure_h)
 	return fig
 
