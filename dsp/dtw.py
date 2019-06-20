@@ -21,7 +21,6 @@
 # TODO(smritip): look into DTW optimizations like Sakoe-Chiba bound
 
 import numpy as np
-from dsp.chroma import wav_to_chroma
 from constants import *
 
 # Create cost matrix between two sequences x and y, using cosine distance.

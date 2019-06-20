@@ -12,7 +12,7 @@
 
 import numpy as np
 from dsp.dtw import get_cost_matrix, run_dtw, find_path
-from dsp.chroma import wav_to_chroma
+from dsp.chroma_scipy import wav_to_chroma
 from mmd.mmd_parser import get_markers, get_samples_to_labels
 from mmd.mmd_creator import make_mmd, get_uid
 from constants import *
