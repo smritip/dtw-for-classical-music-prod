@@ -12,8 +12,8 @@
 		2. Create a cost/similarity matrix ('C') using cosine distance.
 			Cost Matrix C: N x M
 		3. Find the optimal path ('P*') through this matrix: this will give us the correspondence points.
-			* optimal: lowest acculumated cost
-			To find efficiently: introduce acculumated cost matrix ('D') and backtracking matrix ('B')
+			* optimal: lowest accumulated cost
+			To find efficiently: introduce accumulated cost matrix ('D') and backtracking matrix ('B')
 			Accumulated Cost Matrix D: N x M
 			Backtracking Matrix B: N x M
 '''		
@@ -117,6 +117,25 @@ def find_path(B) :
 
 # DTW for audio matching
 # dtw_match_cost calculates warping paths that best match a query to a database by running DTW
+
+'''
+    Dynamic Time Warping (DTW) for Audio Matching
+    Given: An audio snippet (the query), other audio recording(s) (forming a database to search through),
+           the number of matches to find
+    Goal: Find the matches in the database
+    Algorithm:
+      For each recording Y in the database:
+        1. Carry out DTW algorithm above (query is recording X).
+        2. The points in the last row of the accumulated cost matrix D (i.e., D(N, m) for all m in [1, M])
+           give the accumulated costs of the optimal warping paths that end at D(N, m).
+           We call this last row the matching function (‘matching’).
+            Matching Function: D(N, m) for all m in [1, M]
+        3. Find the best match by finding the lowest cost (argmin) from the matching function.
+           To find more matches, repeatedly squash out the surrounding area and find the argmin until
+           you have found the desired number of matches.
+           Note: the quality of the match is directly related to the cost, so the best match will always
+           be the first one found.
+'''     
 
 STEPS = ((-1, -1), (-1, -2), (-2, -1))
 

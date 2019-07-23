@@ -76,3 +76,5 @@ class AudioSearchSystem():
 
 	def format_match(self, match):
 		return self.format_time(match[0]) + " - " + self.format_time(match[1])
+
+# TODO: instructions and examples on how to run script from command line

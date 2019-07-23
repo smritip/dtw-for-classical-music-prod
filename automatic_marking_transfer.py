@@ -75,7 +75,7 @@ class AutomaticMarkingTransfer():
 
         for i in range(len(ref_samples)):
             sample_index = 0
-            while path[sample_index][0] < ref_samples[i]:
+            while path[sample_index][0] < ref_samples[i]:  # 0 for ref, 1 for new
                 sample_index += 1
                 if sample_index == len(path):
                     break
@@ -96,3 +96,5 @@ class AutomaticMarkingTransfer():
         self.progress += 1
 
         print('Automatic marking transfer complete!\n')
+
+# TODO: instructions and examples on how to run script from command line
