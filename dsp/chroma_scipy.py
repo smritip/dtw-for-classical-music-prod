@@ -9,13 +9,28 @@ from constants import *
 def wav_to_chroma(path_to_wav_file, offset=0.0, duration=None):
 
 	# generate wav using wavfile
-	wav_fs, wav = wavfile.read(path_to_wav_file)
-	if type(wav[0, 0]) == np.int16:
+	wav_fs, wav = wavfile.read(path_to_wav_file)  # TODO: bug w wavs that have metadata in chunks...
+	if type(wav.dtype) == np.int16:
 		wav = wav / 2**15
 	wav =  np.mean(wav, axis=1)
 
 	assert(wav_fs == fs)
 	# TODO: resample if not 22050 (use scipy.signal.resample)
+
+	# print(len(wav))
+
+	if offset:
+		num_samples = int(offset * fs)
+		wav = wav[num_samples:]
+
+	if duration:
+		num_samples = int(duration * fs)
+		wav = wav[:num_samples]
+
+	# TODO: offset and duration without loading the whole file
+	# TODO: move loading wav file into a new function
+
+	# print(len(wav))
 
 	# create chroma (STFT --> spectrogram --> chromagram)
 	stft = create_stft(wav)
@@ -47,46 +62,46 @@ def create_stft(wav):
 	return stft
 
 def pitch_to_freq(p):
-    return (2**((p - 69.)/12.)) * 440.
+	return (2**((p - 69.)/12.)) * 440.
 
 def bins_of_pitch(p):
-    freq_min = pitch_to_freq(p - 0.5)
-    freq_max = pitch_to_freq(p + 0.5)
-    out = []
-    for k in range(1, int(fft_len/2) +1):
-        tf = fs / float(fft_len) * k
-        if freq_min <= tf < freq_max:
-            out.append(k)
-    return out
+	freq_min = pitch_to_freq(p - 0.5)
+	freq_max = pitch_to_freq(p + 0.5)
+	out = []
+	for k in range(1, int(fft_len/2) +1):
+		tf = fs / float(fft_len) * k
+		if freq_min <= tf < freq_max:
+			out.append(k)
+	return out
 
 def spec_to_pitch_fb(start_pitch, end_pitch):
-    pitch_range = end_pitch - start_pitch + 1
-    num_bins = int(fft_len/2) + 1
-    c_fp = np.zeros((pitch_range, num_bins))
-    for m in range(pitch_range):
-        bins = bins_of_pitch(m + start_pitch)
-        for n in bins:
-            c_fp[m, n] = 1
-            
-    return c_fp	
+	pitch_range = end_pitch - start_pitch + 1
+	num_bins = int(fft_len/2) + 1
+	c_fp = np.zeros((pitch_range, num_bins))
+	for m in range(pitch_range):
+		bins = bins_of_pitch(m + start_pitch)
+		for n in bins:
+			c_fp[m, n] = 1
+			
+	return c_fp	
 
 def normalize_matrix(mtx):
-    col_norms = np.linalg.norm(mtx, axis=0, ord=2) # ord = 2 means L2 norm
-    return mtx.astype(np.float) / col_norms
+	col_norms = np.linalg.norm(mtx, axis=0, ord=2) # ord = 2 means L2 norm
+	return mtx.astype(np.float) / col_norms
 
 def create_chroma(ft, normalize=True):
-    spec = np.abs(ft) ** 2
-    c_fp = spec_to_pitch_fb(0, 127)
-    
-    pgram = np.dot(c_fp, spec)
-    
-    c_pc = np.tile(np.identity(12), 11)[:, 0:128]
-    
-    c = np.dot(c_pc, pgram)
+	spec = np.abs(ft) ** 2
+	c_fp = spec_to_pitch_fb(0, 127)
+	
+	pgram = np.dot(c_fp, spec)
+	
+	c_pc = np.tile(np.identity(12), 11)[:, 0:128]
+	
+	c = np.dot(c_pc, pgram)
 
-    c = np.log10(1 + 10 * c)
+	c = np.log10(1 + 10 * c)
 
-    if normalize:
-    	c = normalize_matrix(c)
-    
-    return c
+	if normalize:
+		c = normalize_matrix(c)
+	
+	return c

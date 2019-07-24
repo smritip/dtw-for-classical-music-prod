@@ -1,6 +1,6 @@
 import PySimpleGUI as sg
 import os
-import librosa
+# import librosa
 import math
 # import tempfile
 

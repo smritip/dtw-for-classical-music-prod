@@ -18,7 +18,7 @@
 import numpy as np
 from constants import *
 from dsp.dtw import get_cost_matrix, dtw_match_cost, get_match_regions
-from dsp.chroma_sf import wav_to_chroma
+from dsp.chroma_scipy import wav_to_chroma
 
 class AudioSearchSystem():
 
