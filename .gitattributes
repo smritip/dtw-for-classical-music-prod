@@ -1,1 +1,2 @@
 dist/amt_app.exe filter=lfs diff=lfs merge=lfs -text
+dist/search_app_exe.exe filter=lfs diff=lfs merge=lfs -text
