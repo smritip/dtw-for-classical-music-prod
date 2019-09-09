@@ -1,7 +1,7 @@
 import PySimpleGUI as sg
 # import os
 # import librosa
-# import math
+import math
 # import tempfile
 
 # import time
@@ -46,12 +46,13 @@ matches_column.append([sg.Button("Prev", key="Prev"), sg.ReadButton("Next", key=
 layout = [[sg.Text('')],
           [sg.Text('Audio Search System', font=("Helvetica", 20))],
           [sg.Text('')],      
-          # [sg.Text('Path to query wav file:', size=(16, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1), key="__query__"), sg.FileBrowse()],
-          # [sg.Text('Start time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__start_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__start_secs__"), sg.Text('', size=(5, 1)),
-           # sg.Text('End time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_secs__"), sg.Text('', size=(18, 1)),
+          [sg.Text('Path to query wav file:', size=(16, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1), key="__query__"), sg.FileBrowse()],
+          [sg.Text('Start time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__start_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__start_secs__"), sg.Text('', size=(5, 1)),
+           sg.Text('End time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_secs__"), sg.Text('', size=(18, 1))],
            # sg.ReadButton("View Query", key="View Query")],
           # [sg.Text('Folder with wav files to search through:', size=(28, 1), font=("Helvetica", 12)), sg.InputText(key="__db__"), sg.FolderBrowse()],
-          # [sg.Text('Number of matches to find (per file):', size=(28, 1), font=("Helvetica", 12)), sg.InputText(key="__num__")],
+          [sg.Text('Wav files to search through:', size=(22, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1), key="__db__"), sg.FilesBrowse()],
+          [sg.Text('Number of matches to find (per file):', size=(28, 1), font=("Helvetica", 12)), sg.InputText(key="__num__")],
           [sg.ReadButton("Search", key="Search"), sg.Cancel()],
           [sg.ProgressBar(1, orientation='h', size=(30, 15), key='progbar')],
           [sg.Text('', size=(2, 1))],
@@ -151,8 +152,8 @@ while True:
                 window.Element("view"+str(i)).Update(disabled=True)
 
         # TODO: optimize so not happening all the time, just on new pages
-        # num_pages = math.ceil(len(matches_display) / max_num_matches)
-        num_pages = 1
+        num_pages = math.ceil(len(matches_display) / max_num_matches)
+        #num_pages = 1
 
         start_num_results = str((page_index * max_num_matches) + 1)
         if len(matches_display) > max_num_matches:
@@ -255,34 +256,34 @@ while True:
     #     offset = current_offset
     #     duration = current_duration
 
-    # if page_index == 0:
-    #     window.Element('Prev').Update(disabled=True)
-    # else:
-    #     window.Element('Prev').Update(disabled=False)
+    if page_index == 0:
+        window.Element('Prev').Update(disabled=True)
+    else:
+        window.Element('Prev').Update(disabled=False)
 
-    # if page_index == (num_pages - 1):
-    #     window.Element('Next').Update(disabled=True)
-    # else: 
-    #     window.Element('Next').Update(disabled=False)
+    if page_index == (num_pages - 1):
+        window.Element('Next').Update(disabled=True)
+    else: 
+        window.Element('Next').Update(disabled=False)
 
-    # if event == "Next":
-    #     page_index += 1
-    #     print("page i", page_index)
-    #     start_num_results = str((page_index * max_num_matches) + 1)
-    #     if len(matches_display) > max_num_matches:
-    #         end_num_results = str(min((len(matches_display) + 1) - max_num_matches, max_num_matches) + int(start_num_results) - 1)
-    #     else:
-    #         end_num_results = str(len(matches_display))
-    #     window.Element('__matches_fraction__').Update(start_num_results + " - " + end_num_results + " of " + str(len(matches_display)))
+    if event == "Next":
+        page_index += 1
+        print("page i", page_index)
+        start_num_results = str((page_index * max_num_matches) + 1)
+        if len(matches_display) > max_num_matches:
+            end_num_results = str(min((len(matches_display) + 1) - max_num_matches, max_num_matches) + int(start_num_results) - 1)
+        else:
+            end_num_results = str(len(matches_display))
+        window.Element('__matches_fraction__').Update(start_num_results + " - " + end_num_results + " of " + str(len(matches_display)))
 
-    # if event == "Prev":
-    #     page_index -= 1
-    #     start_num_results = str((page_index * max_num_matches) + 1)
-    #     if len(matches_display) > max_num_matches:
-    #         end_num_results = str(min((len(matches_display) + 1) - max_num_matches, max_num_matches) + int(start_num_results) - 1)
-    #     else:
-    #         end_num_results = str(len(matches_display))
-    #     window.Element('__matches_fraction__').Update(start_num_results + " - " + end_num_results + " of " + str(len(matches_display)))
+    if event == "Prev":
+        page_index -= 1
+        start_num_results = str((page_index * max_num_matches) + 1)
+        if len(matches_display) > max_num_matches:
+            end_num_results = str(min((len(matches_display) + 1) - max_num_matches, max_num_matches) + int(start_num_results) - 1)
+        else:
+            end_num_results = str(len(matches_display))
+        window.Element('__matches_fraction__').Update(start_num_results + " - " + end_num_results + " of " + str(len(matches_display)))
 
     # if event == "View Query":
     #     print("hi, hello")
@@ -373,23 +374,27 @@ while True:
 
     if event == "Search":
         
-        # query_wav = values['__query__']
-        # db_dir = values['__db__']
-        # num_matches = int(values['__num__'])
+        query_wav = values['__query__']
+        db = values['__db__'].split(';')  # this is when db is using FilesBrowse (select multiple files browse returns string delimited with ';')
+        num_matches = int(values['__num__'])
 
-        query_wav = '/Users/smriti/Desktop/MIT/Meng/Thesis/dtw-for-classical-music-prod/bso_files/test/4-27_crop.wav'
-        db = ['/Users/smriti/Desktop/MIT/Meng/Thesis/dtw-for-classical-music-prod/bso_files/test/4-27_crop.wav', '/Users/smriti/Desktop/MIT/Meng/Thesis/dtw-for-classical-music-prod/bso_files/test/4-28_crop.wav']
-        num_matches = 2
-        query_start = 20
-        query_end = 35
+        print(db)
+
+        #query_wav = '/Users/smriti/Desktop/MIT/Meng/Thesis/dtw-for-classical-music-prod/bso_files/test/4-27_crop.wav'
+        #db = ['/Users/smriti/Desktop/MIT/Meng/Thesis/dtw-for-classical-music-prod/bso_files/test/4-27_crop.wav', '/Users/smriti/Desktop/MIT/Meng/Thesis/dtw-for-classical-music-prod/bso_files/test/4-28_crop.wav']
+        #query_wav = 'C:\\Users\\smriti\\Desktop\\dtw-for-classical-music-prod\\bso_files\\test\\4-27_crop.wav'
+        #db = ['C:\\Users\\smriti\\Desktop\\dtw-for-classical-music-prod\\bso_files\\test\\4-27_crop.wav', 'C:\\Users\\smriti\\Desktop\\dtw-for-classical-music-prod\\bso_files\\test\\4-28_crop.wav']
+        #num_matches = 2
+        #query_start = 20
+        #query_end = 35
 
         # db = []
         # for file in os.listdir(db_dir):
         #     if file.endswith(".wav"):
         #         db.append(db_dir + "/" + file)
 
-        # query_start = time_to_secs(values['__start_mins__'], values['__start_secs__'])
-        # query_end = time_to_secs(values['__end_mins__'], values['__end_secs__'])
+        query_start = time_to_secs(values['__start_mins__'], values['__start_secs__'])
+        query_end = time_to_secs(values['__end_mins__'], values['__end_secs__'])
 
         matches_display = []
 
