@@ -284,6 +284,7 @@ while True:
         window.Element('__matches_fraction__').Update(start_num_results + " - " + end_num_results + " of " + str(len(matches_display)))
 
     if event == "View Query":
+        print("hi, hello")
         query_wav = values['__query__']
         start = time_to_secs(values['__start_mins__'], values['__start_secs__'])
         new_offset = start

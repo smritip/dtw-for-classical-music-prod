@@ -6,6 +6,7 @@ from automatic_marking_transfer import AutomaticMarkingTransfer
 global amt
 
 # TODO: multiple transfers with FilesBrowse()
+# TODO: check that ref mmd file exists
 
 # UI elements
 layout = [[sg.Text('')],
