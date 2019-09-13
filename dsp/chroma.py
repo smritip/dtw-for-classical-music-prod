@@ -11,10 +11,14 @@ def wav_to_chroma(path_to_wav_file, offset=0.0, duration=None):
 	# generate wav using librosa
 	wav, wav_fs = librosa.load(path_to_wav_file, offset=offset, duration=duration)
 	assert(wav_fs == fs)
+	print("wav", wav)
 
 	# create chroma (STFT --> spectrogram --> chromagram)
 	stft = create_stft(wav)
+	print("stft", stft)
 	chroma = create_chroma(stft)
+
+	print("chroma", chroma)
 
 	return chroma
 

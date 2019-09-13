@@ -31,7 +31,8 @@ data = 0;
 
 count = 0
 while data != '':
-    data = struct.pack("%dh"%(len(sig)), *list(sig))    
+    data = struct.pack("%dh"%(len(sig)), *list(sig))
+    print(data)    
     stream.write(data)
     inc += chunk
     sig = signal[inc : inc + chunk]

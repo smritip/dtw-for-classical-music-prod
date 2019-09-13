@@ -5,14 +5,18 @@ import math
 import numpy as np
 from scipy.io import wavfile
 from constants import *
+# import librosa
 
-def wav_to_chroma(path_to_wav_file, offset=0.0, duration=None):
-
-	# generate wav using wavfile
-	wav_fs, wav = wavfile.read(path_to_wav_file)  # TODO: bug w wavs that have metadata in chunks...
-	if type(wav.dtype) == np.int16:
-		wav = wav / 2**15
-	wav =  np.mean(wav, axis=1)
+def load_wav(path_to_wav_file, offset=0.0, duration=None):
+	# # generate wav using wavfile
+	# wav_fs, wav = wavfile.read('bso_files/test/4-27_crop.wav')
+	# wav_fs, wav = wavfile.read(path_to_wav_file)  # TODO: bug w wavs that have metadata in chunks...
+	wav_fs, wav = wavfile.read(path_to_wav_file)
+	if type(wav[0, 0]) == np.int16:
+			wav = wav / 2**15
+	# if type(new_wav.dtype) == np.int16:
+	# 	new_wav = new_wav / 2**15
+	wav = np.mean(wav, axis=1)
 
 	assert(wav_fs == fs)
 	# TODO: resample if not 22050 (use scipy.signal.resample)
@@ -28,13 +32,23 @@ def wav_to_chroma(path_to_wav_file, offset=0.0, duration=None):
 		wav = wav[:num_samples]
 
 	# TODO: offset and duration without loading the whole file
-	# TODO: move loading wav file into a new function
+	
 
-	# print(len(wav))
+	# for checking:
+	# wav2, fs2 = librosa.load(path_to_wav_file, offset=offset, duration=duration)
+	# print(wav2 == wav)
 
+	return wav
+
+def wav_to_chroma(path_to_wav_file, offset=0.0, duration=None):
+	wav = load_wav(path_to_wav_file, offset, duration)
+	print("wav", wav)
 	# create chroma (STFT --> spectrogram --> chromagram)
 	stft = create_stft(wav)
+	print("stft", stft)
 	chroma = create_chroma(stft)
+
+	print("chroma", chroma)
 
 	return chroma
 

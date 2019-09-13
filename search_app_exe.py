@@ -15,6 +15,7 @@ import wave
 from app_threading import thread_with_trace
 from audio_search_system_exe import AudioSearchSystem
 from display_wav import create_figure, draw_figure
+from dsp.chroma_scipy import load_wav
 from constants import *
 
 global search_system, matches_display, matches_index, now_playing, page_index, num_pages, current_matches_display, media_start_time, media_end_time, paused, rewind, mp3_fd, now_playing_mp3_path
@@ -39,26 +40,26 @@ for i in range(max_num_matches):
 
 matches_column.append([sg.Button("Prev", key="Prev"), sg.ReadButton("Next", key="Next"), sg.Text("", size=(30, 1), key="__matches_fraction__")])
 
-# media_player = [[sg.Canvas(size=(image_width*100, image_height*100), key='canvas'),
-#                  sg.ReadButton('', image_filename='icons/play_reduced.png', image_size=(30, 30), border_width=0, key='Play'),
-#                  sg.ReadButton('', image_filename='icons/pause_reduced.png', image_size=(30, 30), border_width=0, key='Pause'),
-#                  sg.ReadButton('', image_filename='icons/rewind_reduced.png', image_size=(30, 30), border_width=0, key='Rewind')],
-#                  [sg.Text('Now Playing:', size=(70, 1), key="__now_playing__")]]
+media_player = [[sg.Canvas(size=(image_width*100, image_height*100), key='canvas'),
+                 sg.ReadButton('', image_filename='icons/play_reduced.png', image_size=(30, 30), border_width=0, key='Play'),
+                 sg.ReadButton('', image_filename='icons/pause_reduced.png', image_size=(30, 30), border_width=0, key='Pause'),
+                 sg.ReadButton('', image_filename='icons/rewind_reduced.png', image_size=(30, 30), border_width=0, key='Rewind')],
+                 [sg.Text('Now Playing:', size=(70, 1), key="__now_playing__")]]
 
 layout = [[sg.Text('')],
           [sg.Text('Audio Search System', font=("Helvetica", 20))],
           [sg.Text('')],      
           [sg.Text('Path to query wav file:', size=(16, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1), key="__query__"), sg.FileBrowse()],
           [sg.Text('Start time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__start_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__start_secs__"), sg.Text('', size=(5, 1)),
-           sg.Text('End time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_secs__"), sg.Text('', size=(18, 1))],
-           # sg.ReadButton("View Query", key="View Query")],
+           sg.Text('End time (mm:ss):', size=(14, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_mins__"), sg.Text(':', size=(1, 1), font=("Helvetica", 12)), sg.InputText(size=(4, 1), justification='right', key="__end_secs__"), sg.Text('', size=(18, 1)),
+           sg.ReadButton("View Query", key="View Query")],
           # [sg.Text('Folder with wav files to search through:', size=(28, 1), font=("Helvetica", 12)), sg.InputText(key="__db__"), sg.FolderBrowse()],
           [sg.Text('Wav files to search through:', size=(22, 1), font=("Helvetica", 12)), sg.InputText(size=(80, 1), key="__db__"), sg.FilesBrowse()],
           [sg.Text('Number of matches to find (per file):', size=(28, 1), font=("Helvetica", 12)), sg.InputText(key="__num__")],
           [sg.ReadButton("Search", key="Search"), sg.Cancel()],
           [sg.ProgressBar(1, orientation='h', size=(30, 15), key='progbar')],
           [sg.Text('', size=(2, 1))],
-          [sg.Column(matches_column)], #sg.Column(media_player)],
+          [sg.Column(matches_column), sg.Column(media_player)],
           [sg.Text('', size=(2, 1))],
           [sg.Button("Close Window")],
           [sg.Text('', size=(2, 1))]]
@@ -115,10 +116,10 @@ def get_wav_name(file):
     wav_path_parts = file.split("/")
     return wav_path_parts[-1].split(".")[0]
 
-# def draw_wav(wav, vlines=None):
-#     fig = create_figure(wav, image_width, image_height, vlines)
-#     fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
-#     return fig, fig_photo
+def draw_wav(wav, vlines=None):
+    fig = create_figure(wav, image_width, image_height, vlines)
+    fig_photo = draw_figure(window.FindElement('canvas').TKCanvas, fig)
+    return fig, fig_photo
 
 # initializations
 
@@ -287,29 +288,29 @@ while True:
             end_num_results = str(len(matches_display))
         window.Element('__matches_fraction__').Update(start_num_results + " - " + end_num_results + " of " + str(len(matches_display)))
 
-    # if event == "View Query":
-    #     print("hi, hello")
-    #     query_wav = values['__query__']
-    #     start = time_to_secs(values['__start_mins__'], values['__start_secs__'])
-    #     new_offset = start
-    #     end = time_to_secs(values['__end_mins__'], values['__end_secs__'])
-    #     if end == 0:
-    #         new_duration = None
-    #     else:
-    #         new_duration = time_to_secs(values['__end_mins__'], values['__end_secs__']) - new_offset
-    #     if (new_offset != query_offset) or (new_duration != query_duration):
-    #         print(new_offset, new_duration)
-    #         query_offset = new_offset
-    #         query_duration = new_duration
-    #         offset = new_offset
-    #         duration = new_duration
-    #     fig, fig_photo = draw_wav(librosa.load(query_wav, offset=offset, duration=duration)[0], vlines=0.01)
-    #     start = ("{:0.2f}").format(offset)
-    #     end = ("{:0.2f}").format(offset + duration) if (duration is not None) else '[end]'
-    #     display_text = get_wav_name(query_wav) + ": " + start + " - " + end
-    #     window.Element('__now_playing__').Update("Now Playing: " + display_text + " seconds")
-    #     now_playing = query_wav
-    #     paused = False
+    if event == "View Query":
+        print("hi, hello")
+        query_wav = values['__query__']
+        start = time_to_secs(values['__start_mins__'], values['__start_secs__'])
+        new_offset = start
+        end = time_to_secs(values['__end_mins__'], values['__end_secs__'])
+        if end == 0:
+            new_duration = None
+        else:
+            new_duration = time_to_secs(values['__end_mins__'], values['__end_secs__']) - new_offset
+        if (new_offset != query_offset) or (new_duration != query_duration):
+            print(new_offset, new_duration)
+            query_offset = new_offset
+            query_duration = new_duration
+            offset = new_offset
+            duration = new_duration
+        fig, fig_photo = draw_wav(load_wav(query_wav, offset=offset, duration=duration), vlines=0.01)
+        start = ("{:0.2f}").format(offset)
+        end = ("{:0.2f}").format(offset + duration) if (duration is not None) else '[end]'
+        display_text = get_wav_name(query_wav) + ": " + start + " - " + end
+        window.Element('__now_playing__').Update("Now Playing: " + display_text + " seconds")
+        now_playing = query_wav
+        paused = False
 
 
     # if event == "Play" and now_playing and is_wav(now_playing):
