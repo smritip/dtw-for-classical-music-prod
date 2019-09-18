@@ -8,7 +8,7 @@ import wave
 
 # import time
 
-# from pygame import mixer
+from pygame import mixer
 
 # from pydub import AudioSegment
 
@@ -40,8 +40,9 @@ for i in range(max_num_matches):
 
 matches_column.append([sg.Button("Prev", key="Prev"), sg.ReadButton("Next", key="Next"), sg.Text("", size=(30, 1), key="__matches_fraction__")])
 
-media_player = [[sg.Canvas(size=(image_width*100, image_height*100), key='canvas')]]
- #                sg.ReadButton('', image_filename='icons/play_reduced.png', image_size=(30, 30), border_width=0, key='Play'),
+media_player = [[sg.Canvas(size=(image_width*100, image_height*100), key='canvas'),
+                 sg.ReadButton("Play", key="Play")]]
+                # sg.ReadButton('', image_filename='icons/play_reduced.png', image_size=(30, 30), border_width=0, key='Play')]]
   #               sg.ReadButton('', image_filename='icons/pause_reduced.png', image_size=(30, 30), border_width=0, key='Pause'),
    #              sg.ReadButton('', image_filename='icons/rewind_reduced.png', image_size=(30, 30), border_width=0, key='Rewind')],
     #             [sg.Text('Now Playing:', size=(70, 1), key="__now_playing__")]]
@@ -78,7 +79,7 @@ page_index = 0
 num_pages = 1
 current_matches_display = None
 
-# mixer.init()
+mixer.init()
 media_start_time = None
 media_end_time = None
 paused = False
@@ -311,6 +312,11 @@ while True:
         #window.Element('__now_playing__').Update("Now Playing: " + display_text + " seconds")
         #now_playing = query_wav
         #paused = False
+
+    if event == "Play":
+        #print("hello")
+        mixer.music.load(values['__query__'])
+        mixer.music.play()
 
 
     # if event == "Play" and now_playing and is_wav(now_playing):
