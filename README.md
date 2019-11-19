@@ -13,4 +13,4 @@ This repository maintains the code for:
 * the scripts to run the AMT and AS standalone Python applications, and
 * the respective Windows executables for the apps (found in ``dist"), which require no installation of Python.
 
-#[comment]: <> (TODO: add screenshots of applications)
+[comment]: <> (TODO: add screenshots of applications)
