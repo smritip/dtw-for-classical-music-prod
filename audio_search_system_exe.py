@@ -1,4 +1,5 @@
-## Smriti Pramanick
+## Audio Search System (with modifications to allow for exe creation)
+## Copyright (C) 2019 Smriti Pramanick
 ## Using Dynamic Time Warping to Improve the Classical Music Production Workflow
 
 '''

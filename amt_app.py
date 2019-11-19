@@ -1,3 +1,7 @@
+## Standalone Python Application for Automatic Marking Transfer
+## Copyright (C) 2019 Smriti Pramanick
+## Using Dynamic Time Warping to Improve the Classical Music Production Workflow
+
 import PySimpleGUI as sg
 
 from app_threading import thread_with_trace

@@ -1,3 +1,7 @@
+## Standalone Python Application for Audio Search System (with modifications to allow for exe creation)
+## Copyright (C) 2019 Smriti Pramanick
+## Using Dynamic Time Warping to Improve the Classical Music Production Workflow
+
 import PySimpleGUI as sg
 # import os
 # import librosa

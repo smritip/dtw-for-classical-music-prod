@@ -1,4 +1,7 @@
-## Smriti Pramanick
+## Dynamic Time Warping (DTW) Algorithms for:
+##      Audio Synchronization (used in AMT System), and
+##      Audio Matching (used in AS System)
+## Copyright (C) 2019 Smriti Pramanick
 ## Using Dynamic Time Warping to Improve the Classical Music Production Workflow
 
 '''

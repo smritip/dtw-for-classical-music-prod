@@ -1,4 +1,5 @@
-## Smriti Pramanick
+## Creating chromagrams from wave files, using scipy.io's wavfile library.
+## Copyright (C) 2019 Smriti Pramanick
 ## Using Dynamic Time Warping to Improve the Classical Music Production Workflow
 
 import math

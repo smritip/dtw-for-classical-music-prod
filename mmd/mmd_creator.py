@@ -1,4 +1,5 @@
-## Smriti Pramanick
+## Creating MMD files from marking metadata (specific to Pyramix's MediaMarker).
+## Copyright (C) 2019 Smriti Pramanick
 ## Using Dynamic Time Warping to Improve the Classical Music Production Workflow
 
 import xml.etree.ElementTree as ET

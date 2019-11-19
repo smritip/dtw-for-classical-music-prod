@@ -1,3 +1,7 @@
+## Draw waveforms using matplotlib (for audio search system GUI)
+## Copyright (C) 2019 Smriti Pramanick
+## Using Dynamic Time Warping to Improve the Classical Music Production Workflow
+
 # source: https://github.com/PySimpleGUI/PySimpleGUI/blob/master/DemoPrograms/Demo_Matplotlib.py
 
 import PySimpleGUI as sg
